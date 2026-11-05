@@ -1,0 +1,27 @@
+---
+import Base from '../layouts/Base.astro';
+import FaqList from '../components/FaqList.astro';
+import FinalCta from '../components/FinalCta.astro';
+import { FAQ_GENERAL } from '../data/faq';
+import { VERTICALS } from '../data/verticals';
+import { faqSchema, orgSchema } from '../lib/schema';
+const all = [...FAQ_GENERAL, ...VERTICALS.flatMap((v) => v.faq)];
+---
+<Base
+  title="Preguntas frecuentes | Dos Deltas"
+  description="Cuánto cobro, pedido mínimo, cómo pagarle a la fábrica con las reglas del BCRA, inspección antes del saldo y qué necesitás para importar de China."
+  og="preguntas-frecuentes"
+  crumbs={[{ name: 'Preguntas frecuentes', href: '/preguntas-frecuentes' }]}
+  schema={[orgSchema(Astro.site!), faqSchema(all)]}
+>
+  <section class="pt-10 md:pt-20">
+    <div class="wrap">
+      <p class="eyebrow">Preguntas frecuentes</p>
+      <h1 class="mt-4 text-display-m md:text-display">Lo que más me preguntan</h1>
+    </div>
+    <hr class="equator mt-10" />
+  </section>
+  <FaqList items={FAQ_GENERAL} title="Generales" id="faq-general" />
+  {VERTICALS.map((v) => <FaqList items={v.faq} title={v.label} id={`faq-${v.slug}`} />)}
+  <FinalCta />
+</Base>

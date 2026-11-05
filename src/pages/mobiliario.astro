@@ -1,0 +1,6 @@
+---
+import VerticalPage from '../components/VerticalPage.astro';
+import { getVertical } from '../data/verticals';
+const v = getVertical('mobiliario')!;
+---
+<VerticalPage v={v} />

@@ -1,0 +1,21 @@
+---
+const items = [
+  { t: 'Cotizaciones que se pueden comparar', d: 'Mismas especificaciones, 2 a 4 fábricas, precio FOB y estimado puesto en Argentina.' },
+  { t: 'Fábricas verificadas, no revendedores', d: 'Licencia, capacidad, visita o videollamada en planta y referencias.' },
+  { t: 'Control antes de pagar el saldo', d: 'Inspección previa al embarque, con informe y fotos.' },
+];
+---
+<section class="section" aria-labelledby="vp-title">
+  <div class="wrap">
+    <h2 id="vp-title" class="sr-only">Qué recibís</h2>
+    <ol class="grid gap-6 md:grid-cols-3">
+      {items.map((it, i) => (
+        <li class="border-t border-ink pt-4">
+          <p class="fig text-ink-muted">0{i + 1}</p>
+          <h3 class="mt-2 text-h2">{it.t}</h3>
+          <p class="mt-2 text-ink-muted">{it.d}</p>
+        </li>
+      ))}
+    </ol>
+  </div>
+</section>

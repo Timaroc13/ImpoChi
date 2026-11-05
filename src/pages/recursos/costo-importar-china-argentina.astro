@@ -1,0 +1,151 @@
+---
+import Base from '../../layouts/Base.astro';
+import FinalCta from '../../components/FinalCta.astro';
+import { landedCost } from '../../lib/landed.js';
+import { fmtUSD, fmtNum } from '../../lib/format.js';
+import { orgSchema, faqSchema } from '../../lib/schema';
+
+const r = landedCost({ fob: 20000, freight: 1260, die: 0.18 });
+const rows: [string, number, string][] = [
+  ['FOB', r.fob, ''],
+  ['Flete marítimo LCL y seguro (est.)', r.freight, ''],
+  ['Valor en aduana (CIF)', r.cif, 'subtotal'],
+  ['Derecho de importación 18 %', r.duty, 'Costo'],
+  ['Tasa de estadística 3 %', r.tasa, 'Costo'],
+  ['Base imponible', r.base, 'subtotal'],
+  ['IVA 21 %', r.iva, 'Crédito fiscal'],
+  ['IVA adicional 20 %', r.ivaAd, 'Percepción'],
+  ['Ganancias 6 %', r.gan, 'Percepción'],
+  ['Ingresos Brutos ~2,5 %', r.iibb, 'Percepción'],
+  ['Despachante, terminal, gastos LCL en destino y flete local (est.)', r.local, 'Costo'],
+];
+const faq = [
+  { q: '¿Cuánto cuesta importar de China a Argentina?', a: `En un ejemplo de ${fmtUSD(20000)} FOB con 18 % de derecho de importación, el costo real puesto en Argentina ronda ${fmtNum(r.costMultiple, 2)} veces el FOB, pero en la aduana tenés que poner cerca de ${fmtNum(r.cashMultiple, 2)} veces el FOB, porque IVA y percepciones se pagan antes y se recuperan después.` },
+  { q: '¿Las percepciones de IVA y Ganancias se recuperan?', a: 'Sí, si sos Responsable Inscripto: el IVA y el IVA adicional se computan como crédito fiscal, y la percepción de Ganancias como pago a cuenta. Pero salen de tu caja al despachar y vuelven meses después.' },
+  { q: '¿Sigue existiendo el Impuesto PAIS o las SIRA?', a: 'No. El Impuesto PAIS se eliminó en diciembre de 2024. Las SIRA se reemplazaron por el SEDI en diciembre de 2023, y el SEDI se eliminó en febrero de 2025.' },
+];
+---
+<Base
+  title="Cuánto cuesta importar de China a Argentina (2026) | Dos Deltas"
+  description="Ejemplo paso a paso: de USD 20.000 FOB a costo puesto en Argentina, con derechos, tasa de estadística, IVA y percepciones. Incluye calculadora."
+  og="costo-importar"
+  crumbs={[{ name: 'Recursos', href: '/recursos/costo-importar-china-argentina' }, { name: 'Costo de importar de China', href: '/recursos/costo-importar-china-argentina' }]}
+  schema={[orgSchema(Astro.site!), faqSchema(faq), {
+    '@type': 'Article',
+    headline: 'Cuánto cuesta importar de China a Argentina',
+    inLanguage: 'es-AR',
+    author: { '@id': new URL('/#founder', Astro.site!).href },
+    publisher: { '@id': new URL('/#org', Astro.site!).href },
+    dateModified: '2026-11-05',
+  }]}
+>
+  <article>
+    <section class="pt-10 md:pt-20">
+      <div class="wrap">
+        <p class="eyebrow">Recursos · Actualizado en noviembre de 2026</p>
+        <h1 class="mt-4 max-w-[22ch] text-display-m md:text-display">Cuánto cuesta importar de China a Argentina</h1>
+        <p class="mt-6 max-w-[62ch] text-[18px] leading-[28px]">Por cada dólar FOB, el costo real puesto en tu depósito ronda <span class="fig text-[18px]">{fmtNum(r.costMultiple, 2)}</span>. Pero en la aduana tenés que poner cerca de <span class="fig text-[18px]">{fmtNum(r.cashMultiple, 2)}</span>, porque IVA y percepciones se pagan antes y se recuperan después.</p>
+      </div>
+      <hr class="equator mt-10" />
+    </section>
+
+    <section class="section">
+      <div class="wrap">
+        <h2 class="text-h1-m md:text-h1">Ejemplo: {fmtUSD(20000)} FOB desde Shenzhen</h2>
+        <p class="mt-4 max-w-[64ch] text-ink-muted">Carga consolidada (LCL), derecho de importación supuesto de 18 %. Es ilustrativo: el derecho depende de la posición arancelaria (NCM) de tu producto; verificalo con tu despachante. La tasa de estadística se toma al 3 % sin tope, para ser conservadores.</p>
+        <div class="mt-10 overflow-x-auto">
+          <table class="w-full min-w-[560px] border-collapse bg-paper-raised text-left">
+            <thead>
+              <tr class="border-b border-ink">
+                <th scope="col" class="eyebrow px-4 py-2">Concepto</th>
+                <th scope="col" class="eyebrow px-4 py-2">Naturaleza</th>
+                <th scope="col" class="eyebrow px-4 py-2 text-right">USD</th>
+              </tr>
+            </thead>
+            <tbody>
+              {rows.map(([label, v, kind]) => (
+                <tr class:list={['border-b border-line', kind === 'subtotal' && 'bg-paper']}>
+                  <th scope="row" class:list={['px-4 py-2', kind === 'subtotal' ? 'font-semibold' : 'font-normal']}>{label}</th>
+                  <td class="px-4 py-2 text-small text-ink-muted">{kind === 'subtotal' ? '' : kind}</td>
+                  <td class="fig px-4 py-2 text-right">{fmtNum(Math.round(v))}</td>
+                </tr>
+              ))}
+              <tr class="border-b border-line bg-river-soft">
+                <th scope="row" class="px-4 py-4 font-semibold">Plata que ponés al despachar</th>
+                <td class="px-4 py-4 text-small">{fmtNum(r.cashMultiple, 2)} × FOB</td>
+                <td class="fig px-4 py-4 text-right font-semibold">{fmtNum(Math.round(r.cashOut))}</td>
+              </tr>
+              <tr class="border-b border-ink bg-river-soft">
+                <th scope="row" class="px-4 py-4 font-semibold">Costo real, después de recuperar créditos</th>
+                <td class="px-4 py-4 text-small">{fmtNum(r.costMultiple, 2)} × FOB</td>
+                <td class="fig px-4 py-4 text-right font-semibold">{fmtNum(Math.round(r.trueCost))}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="mt-4 text-small text-ink-muted">Todos los impuestos se calculan sobre el valor en aduana (CIF) más el derecho y la tasa de estadística. IVA, IVA adicional, Ganancias e Ingresos Brutos se recuperan como crédito fiscal o pago a cuenta si sos Responsable Inscripto.</p>
+      </div>
+    </section>
+
+    <section class="section bg-paper-raised border-y border-line" aria-labelledby="calc-title">
+      <div class="wrap">
+        <p class="eyebrow">Calculadora</p>
+        <h2 id="calc-title" class="mt-2 text-h1-m md:text-h1">Hacé la cuenta con tu pedido</h2>
+        <form class="mt-10 grid gap-6 md:grid-cols-4" data-calc onsubmit="return false">
+          {[
+            ['fob', 'FOB (USD)', '20000', '100'],
+            ['freight', 'Flete y seguro (USD)', '1260', '10'],
+            ['die', 'Derecho de importación (%)', '18', '0.1'],
+            ['iibb', 'Ingresos Brutos (%)', '2.5', '0.1'],
+          ].map(([n, l, v, s]) => (
+            <label class="block font-semibold">{l}
+              <input name={n} type="number" min="0" step={s} value={v} inputmode="decimal" class="fig mt-2 block w-full rounded-sm border border-line bg-paper px-4 py-3 text-right" />
+            </label>
+          ))}
+        </form>
+        <dl class="mt-10 grid gap-6 md:grid-cols-3" aria-live="polite">
+          <div class="border-t border-ink pt-4"><dt class="eyebrow">Plata al despachar</dt><dd class="mt-2"><span class="fig block text-h2" data-out="cashOut">—</span><span class="block text-small text-ink-muted" data-mult="cashOut"></span></dd></div>
+          <div class="border-t border-ink pt-4"><dt class="eyebrow">Créditos a recuperar</dt><dd class="mt-2"><span class="fig block text-h2" data-out="credits">—</span><span class="block text-small text-ink-muted" data-mult="credits"></span></dd></div>
+          <div class="border-t border-ink pt-4"><dt class="eyebrow">Costo real</dt><dd class="mt-2"><span class="fig block text-h2" data-out="trueCost">—</span><span class="block text-small text-ink-muted" data-mult="trueCost"></span></dd></div>
+        </dl>
+        <p class="mt-6 text-small text-ink-muted">Incluye USD 1.200 de gastos locales estimados y 3 % de tasa de estadística. Ganancias al 6 % (11 % si es para consumo final). Es una estimación, no un asesoramiento impositivo.</p>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="wrap prose-dd">
+        <h2 class="!mt-0">Qué cambió y qué sigue igual</h2>
+        <ul>
+          <li><strong>Ya no existen</strong> las SIRA ni el SEDI: no hay declaración previa obligatoria. El Impuesto PAIS se eliminó en diciembre de 2024.</li>
+          <li><strong>Bajaron los aranceles</strong> de muchos bienes de consumo, textiles, bienes de capital e insumos plásticos durante 2025.</li>
+          <li><strong>Seguridad eléctrica:</strong> se aceptan certificados IEC o extranjeros con una declaración jurada de conformidad.</li>
+          <li><strong>Pago al exterior:</strong> las pymes pueden pagar al contado con documentos de embarque. Los anticipos antes del embarque siguen restringidos, salvo hasta 30 % FOB en bienes de capital.</li>
+          <li><strong>Sigue igual:</strong> para el régimen general tenés que ser Responsable Inscripto o sociedad. Los controles sanitarios y de seguridad por producto (SENASA, ANMAT, INAL) siguen vigentes.</li>
+        </ul>
+        <h2>La pregunta real</h2>
+        <p>No es si China es más barato, sino si podés financiar cerca de dos veces el FOB durante 2 a 9 meses, entre el pago a la fábrica, la aduana y la recuperación de créditos. Por eso cada cotización que preparo muestra el costo puesto en Argentina, no solo el FOB.</p>
+        <p class="text-small text-ink-muted">Fuentes: ARCA, BCRA (Com. A 8226 y A 8307), Res. 16/2025, RG 2937, RG 2281 y prensa especializada. Información general al noviembre de 2026; confirmá tu caso con tu despachante y tu contador.</p>
+      </div>
+    </section>
+  </article>
+  <FinalCta />
+</Base>
+
+<script>
+  import { landedCost } from '../../lib/landed.js';
+  const form = document.querySelector<HTMLFormElement>('[data-calc]')!;
+  const nf = new Intl.NumberFormat('es-AR', { maximumFractionDigits: 0 });
+  const num = (n: string) => Math.max(0, Number((form.elements.namedItem(n) as HTMLInputElement).value) || 0);
+  const run = () => {
+    const fob = num('fob');
+    const r = landedCost({ fob, freight: num('freight'), die: num('die') / 100, iibb: num('iibb') / 100 });
+    const mult = (x: number) => (fob ? ` (${(x / fob).toFixed(2).replace('.', ',')} × FOB)` : '');
+    (['cashOut', 'credits', 'trueCost'] as const).forEach((k) => {
+      const el = document.querySelector(`[data-out="${k}"]`)!;
+      el.textContent = `USD ${nf.format(r[k])}`;
+      document.querySelector(`[data-mult="${k}"]`)!.textContent = mult(r[k]).trim().replace(/[()]/g, '');
+    });
+  };
+  form.addEventListener('input', run);
+  run();
+</script>

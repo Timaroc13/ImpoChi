@@ -1,0 +1,15 @@
+---
+import WaLink from './WaLink.astro';
+import { TERMS } from '../config';
+interface Props { waText?: string; href?: string }
+const { waText, href = '/cotizacion' } = Astro.props;
+---
+<section class="bg-river text-on-river">
+  <div class="wrap flex flex-col gap-6 py-10 md:flex-row md:items-center md:justify-between md:py-20">
+    <h2 class="max-w-[24ch] text-h1-m text-on-river md:text-h1">¿Tenés un pedido en mente? Contámelo y en {TERMS.replyHours} h hábiles te digo si puedo ayudarte.</h2>
+    <div class="flex flex-wrap gap-4">
+      <a href={href} class="btn bg-paper text-ink hover:bg-paper-raised" data-cta="final">Pedí tu cotización</a>
+      <WaLink location="final" text={waText} class="btn border border-on-river text-on-river hover:bg-ink" />
+    </div>
+  </div>
+</section>

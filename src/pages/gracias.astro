@@ -1,0 +1,70 @@
+---
+import Base from '../layouts/Base.astro';
+import { SITE, hasWhatsApp, TERMS } from '../config';
+import { waLink } from '../lib/lead.js';
+const defaultWa = hasWhatsApp ? waLink(SITE.whatsapp, 'Hola Octa, acabo de mandar una consulta.') : '';
+---
+<Base title="Consulta recibida | Dos Deltas" description="Recibí tu consulta." noindex og="home" hideFloatingWa>
+  <section class="section">
+    <div class="wrap max-w-[760px]">
+      <p class="eyebrow">Consulta recibida</p>
+      <h1 class="mt-4 text-h1-m md:text-h1" data-thanks-title>Listo. Te respondo en {TERMS.replyHours} h hábiles (hora de Buenos Aires).</h1>
+      <p class="mt-4">Mientras tanto, si querés adelantar, reservá una llamada de 20 minutos o escribime por WhatsApp.</p>
+      <div class="mt-6 flex flex-wrap gap-4">
+        {hasWhatsApp && <a href={defaultWa} class="btn-primary" data-wa="gracias" data-wa-prefill target="_blank" rel="noopener">Escribime por WhatsApp</a>}
+        <a href="/muestras/comparacion-cotizaciones-ejemplo.pdf" class="btn-secondary" data-sample="comparacion" download>Ejemplo de comparación (PDF)</a>
+      </div>
+      <hr class="equator my-10" />
+      <h2 class="text-h2">Reservá la llamada</h2>
+      {SITE.calLink ? (
+        <div id="cal-inline" class="mt-6 min-h-[560px] w-full border border-line bg-paper-raised" data-cal-link={SITE.calLink}></div>
+      ) : (
+        <p class="mt-4 text-ink-muted">Te escribo para coordinar un horario entre 9 y 19 h de Argentina.</p>
+      )}
+      <h2 class="mt-10 text-h2">Qué sigue</h2>
+      <ol class="mt-4 space-y-2 border-t border-line pt-4">
+        <li><span class="fig text-ink-muted">01</span> Leo tu pedido y te confirmo si puedo ayudarte.</li>
+        <li><span class="fig text-ink-muted">02</span> Llamada de 20 minutos para cerrar especificaciones.</li>
+        <li><span class="fig text-ink-muted">03</span> Si avanzamos, te mando la propuesta por escrito y arranco la búsqueda.</li>
+      </ol>
+    </div>
+  </section>
+</Base>
+
+<script>
+  import { waLink } from '../lib/lead.js';
+  try {
+    const lead = JSON.parse(sessionStorage.getItem('dd_lead') || 'null');
+    if (lead?.nombre) {
+      const t = document.querySelector('[data-thanks-title]');
+      if (t) t.textContent = `Listo, ${lead.nombre}. ${t.textContent!.replace(/^Listo\.\s*/, '')}`;
+    }
+    const a = document.querySelector<HTMLAnchorElement>('[data-wa-prefill]');
+    if (a && lead?.producto) {
+      const num = new URL(a.href).pathname.slice(1);
+      a.href = waLink(num, `Hola Octa, acabo de mandar una consulta por ${lead.producto}.`);
+    }
+  } catch {}
+
+  const cal = document.getElementById('cal-inline');
+  if (cal) {
+    const link = cal.dataset.calLink!;
+    // Official Cal.com embed loader
+    (function (C: any, A: string, L: string) {
+      const p = function (a: any, ar: any) { a.q.push(ar); };
+      const d = C.document;
+      C.Cal = C.Cal || function () {
+        const cal = C.Cal; const ar = arguments;
+        if (!cal.loaded) { cal.ns = {}; cal.q = cal.q || []; d.head.appendChild(d.createElement('script')).src = A; cal.loaded = true; }
+        if (ar[0] === L) { const api: any = function () { p(api, arguments); }; const namespace = ar[1]; api.q = api.q || [];
+          if (typeof namespace === 'string') { cal.ns[namespace] = cal.ns[namespace] || api; p(cal.ns[namespace], ar); p(cal, ['initNamespace', namespace]); } else p(cal, ar); return; }
+        p(cal, ar);
+      };
+    })(window, 'https://app.cal.com/embed/embed.js', 'init');
+    const Cal = (window as any).Cal;
+    Cal('init', 'dd', { origin: 'https://cal.com' });
+    Cal.ns.dd('inline', { elementOrSelector: '#cal-inline', calLink: link, layout: 'month_view' });
+    Cal.ns.dd('ui', { cssVarsPerTheme: { light: { 'cal-brand': '#1f5560' } }, hideEventTypeDetails: false });
+    Cal.ns.dd('on', { action: 'bookingSuccessful', callback: () => (window as any).ddTrack?.('book_call') });
+  }
+</script>

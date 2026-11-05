@@ -1,0 +1,83 @@
+---
+import Base from '../layouts/Base.astro';
+import ValueProps from './ValueProps.astro';
+import HowItWorks from './HowItWorks.astro';
+import FounderStrip from './FounderStrip.astro';
+import QuoteForm from './QuoteForm.astro';
+import FaqList from './FaqList.astro';
+import FinalCta from './FinalCta.astro';
+import WaLink from './WaLink.astro';
+import type { Vertical } from '../data/verticals';
+import { faqSchema, serviceSchema, orgSchema } from '../lib/schema';
+import { fmtUSD } from '../lib/format.js';
+import { TERMS } from '../config';
+
+interface Props { v: Vertical }
+const { v } = Astro.props;
+const site = Astro.site!;
+---
+<Base
+  title={v.title}
+  description={v.description}
+  og={v.slug}
+  waText={v.waText}
+  crumbs={[{ name: v.label, href: `/${v.slug}` }]}
+  schema={[orgSchema(site), serviceSchema(site, v.serviceName, `/${v.slug}`, v.searchFee), faqSchema(v.faq)]}
+>
+  <section class="pt-10 md:pt-20">
+    <div class="wrap">
+      <p class="eyebrow">{v.label}</p>
+      <h1 class="mt-4 max-w-[22ch] text-display-m md:text-display">{v.h1}</h1>
+      <p class="mt-6 max-w-[56ch] text-[18px] leading-[28px] text-ink">{v.sub}</p>
+      <div class="mt-6 flex flex-wrap gap-4">
+        <a href="#cotizar" class="btn-primary" data-cta={`hero-${v.slug}`}>Pedí tu cotización</a>
+        <WaLink location={`hero-${v.slug}`} text={v.waText} />
+      </div>
+      <p class="mt-6 text-small text-ink-muted">Base en Hong Kong · A 1 hora de Shenzhen · Sin comisiones de fábricas · Búsqueda <span class="fig text-small">{fmtUSD(v.searchFee)}</span></p>
+    </div>
+    <hr class="equator mt-10 md:mt-20" />
+  </section>
+
+  <ValueProps />
+
+  <section class="section bg-paper-raised border-y border-line" aria-labelledby="ex-title">
+    <div class="wrap">
+      <p class="eyebrow">Ejemplos</p>
+      <h2 id="ex-title" class="mt-2 text-h1-m md:text-h1">Ejemplos de lo que cotizo</h2>
+      <p class="mt-4 max-w-[64ch] text-ink-muted">{v.intro}</p>
+      <ul class="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        {v.examples.map((ex) => (
+          <li class="rounded-md border border-line bg-paper p-6">
+            <h3 class="text-h2">{ex.name}</h3>
+            <ul class="mt-4 space-y-1 border-t border-line pt-4 text-small text-ink">
+              {ex.specs.map((s) => <li>{s}</li>)}
+            </ul>
+          </li>
+        ))}
+      </ul>
+      {v.note && <p class="mt-6 max-w-[64ch] rounded-sm bg-river-soft p-4 text-small text-ink">{v.note}</p>}
+    </div>
+  </section>
+
+  <section class="section" aria-labelledby="need-title">
+    <div class="wrap grid gap-10 md:grid-cols-[1fr_1.3fr]">
+      <div>
+        <p class="eyebrow">Para cotizar bien</p>
+        <h2 id="need-title" class="mt-2 text-h1-m md:text-h1">Qué necesito de vos</h2>
+        <p class="mt-4 text-ink-muted">No hace falta tener todo. Con lo que tengas arranco, y en la llamada completamos el resto.</p>
+      </div>
+      <ol class="border-t border-line">
+        {v.checklist.map((c, i) => (
+          <li class="flex gap-4 border-b border-line py-4"><span class="fig w-8 shrink-0 text-ink-muted">{String(i + 1).padStart(2, '0')}</span><span>{c}</span></li>
+        ))}
+      </ol>
+    </div>
+  </section>
+
+  <HowItWorks />
+  <FounderStrip />
+  <QuoteForm rubro={v.rubro} heading={`Pedí tu cotización de ${v.label.toLowerCase()}`} />
+  <FaqList items={v.faq} id={`faq-${v.slug}`} />
+  <p class="wrap -mt-6 pb-10 text-small"><a href="/preguntas-frecuentes">Ver todas las preguntas</a> · Pedido mínimo <span class="fig text-small">{fmtUSD(TERMS.minOrder)}</span></p>
+  <FinalCta waText={v.waText} href="#cotizar" />
+</Base>

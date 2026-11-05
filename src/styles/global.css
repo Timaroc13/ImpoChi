@@ -1,0 +1,118 @@
+@import "tailwindcss";
+
+/* Dos Deltas design tokens (from the Dos Deltas design system, tokens.json v1).
+   The palette is restricted to the tokens: no Tailwind default colours. */
+@theme {
+  --color-*: initial;
+  --color-paper: #f5f2ec;
+  --color-paper-raised: #ffffff;
+  --color-line: #d6cfc2;
+  --color-ink: #13262b;
+  --color-ink-muted: #56656b;
+  --color-river: #1f5560;
+  --color-river-soft: #e3ecec;
+  --color-on-river: #ffffff;
+  --color-silt: #a9743a;
+  --color-signal: #b0432a;
+
+  --font-*: initial;
+  --font-serif: "Source Serif 4", Georgia, "Times New Roman", serif;
+  --font-sans: "IBM Plex Sans", "Helvetica Neue", Arial, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+
+  /* Spacing: Tailwind's 4px base already gives space-2 = 8px, space-4 = 16px,
+     space-6 = 24px, space-10 = 40px. Use only 2 / 4 / 6 / 10 (and their sums). */
+
+  --radius-*: initial;
+  --radius-sm: 2px; /* inputs, chips */
+  --radius-md: 4px; /* buttons, cards — the largest radius in the system */
+
+  --text-*: initial;
+  --text-display: 56px;
+  --text-display--line-height: 60px;
+  --text-display--letter-spacing: -0.01em;
+  --text-display-m: 40px; /* mobile step for display (not in the design system; flagged in README) */
+  --text-display-m--line-height: 44px;
+  --text-display-m--letter-spacing: -0.01em;
+  --text-h1: 36px;
+  --text-h1--line-height: 42px;
+  --text-h1-m: 30px;
+  --text-h1-m--line-height: 36px;
+  --text-h2: 24px;
+  --text-h2--line-height: 30px;
+  --text-body: 16px;
+  --text-body--line-height: 26px;
+  --text-small: 13px;
+  --text-small--line-height: 20px;
+  --text-label: 12px;
+  --text-label--line-height: 16px;
+  --text-label--letter-spacing: 0.06em;
+  --text-figure: 15px;
+  --text-figure--line-height: 22px;
+}
+
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+    scroll-behavior: smooth;
+  }
+  body {
+    @apply bg-paper text-ink font-sans text-body antialiased;
+  }
+  h1, h2, h3 {
+    @apply font-serif font-semibold text-ink;
+  }
+  a {
+    @apply text-river underline underline-offset-2;
+  }
+  :focus-visible {
+    outline: 2px solid var(--color-river);
+    outline-offset: 2px;
+  }
+  ::selection {
+    background: var(--color-river-soft);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+  }
+}
+
+@utility wrap {
+  @apply mx-auto w-full max-w-[1120px] px-6 md:px-10;
+}
+@utility section {
+  @apply py-10 md:py-20;
+}
+@utility eyebrow {
+  @apply font-sans text-label font-semibold uppercase text-ink-muted;
+}
+@utility fig {
+  @apply font-mono text-figure font-medium tabular-nums;
+}
+/* The "equator": a full-width horizontal hairline, the brand's structural device. */
+@utility equator {
+  @apply h-px w-full border-0 bg-line;
+}
+@utility btn {
+  @apply inline-flex min-h-12 items-center justify-center gap-2 rounded-md px-6 py-3 font-sans text-body font-semibold no-underline transition-colors;
+}
+@utility btn-primary {
+  @apply btn bg-river text-on-river hover:bg-ink;
+}
+@utility btn-secondary {
+  @apply btn border border-ink bg-transparent text-ink hover:bg-paper-raised;
+}
+@utility card {
+  @apply rounded-md border border-line bg-paper-raised p-6;
+}
+@utility chip {
+  @apply inline-flex items-center rounded-sm border border-line px-2 py-0.5 text-small;
+}
+@utility prose-dd {
+  & p { @apply mb-4 max-w-[68ch]; }
+  & h2 { @apply mt-10 mb-4 text-h2; }
+  & h3 { @apply mt-6 mb-2 font-sans text-body font-semibold; }
+  & ul { @apply mb-4 max-w-[68ch] list-disc pl-6; }
+  & ol { @apply mb-4 max-w-[68ch] list-decimal pl-6; }
+  & li { @apply mb-1; }
+}

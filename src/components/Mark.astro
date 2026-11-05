@@ -1,0 +1,14 @@
+---
+// The Dos Deltas mark: two solid triangles offset across a gap.
+// Upper points up (river, Pearl River), lower points down (silt, Paraná).
+// Rebuilt from the design-system spec; replace with the exported SVGs from the Logos group when available.
+interface Props { variant?: 'color' | 'ink' | 'paper'; size?: number; class?: string; title?: string }
+const { variant = 'color', size = 24, class: cls = '', title } = Astro.props;
+const upper = variant === 'color' ? 'var(--color-river)' : variant === 'ink' ? 'var(--color-ink)' : 'var(--color-paper)';
+const lower = variant === 'color' ? 'var(--color-silt)' : upper;
+const w = (size * 36) / 44;
+---
+<svg viewBox="0 0 36 44" width={w} height={size} class={cls} role={title ? 'img' : undefined} aria-hidden={title ? undefined : 'true'} aria-label={title}>
+  <polygon points="0,20 24,20 12,0" fill={upper} />
+  <polygon points="12,24 36,24 24,44" fill={lower} />
+</svg>

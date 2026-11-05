@@ -1,0 +1,27 @@
+---
+import { TERMS } from '../config';
+import { fmtUSD } from '../lib/format.js';
+const steps = [
+  { t: 'Contanos qué necesitás', d: 'Por el formulario o por WhatsApp. Te lleva 5 minutos.' },
+  { t: 'Llamada de 20 minutos', d: `Afinamos especificaciones, volumen y plazos. Si avanzamos, abonás la búsqueda (${fmtUSD(TERMS.searchFee)}, o ${fmtUSD(TERMS.searchFeeMachinery)} en maquinaria).` },
+  { t: 'Recibís las cotizaciones', d: `En unos ${TERMS.turnaroundDays} días hábiles, comparadas en una tabla, con el costo estimado puesto en Argentina.` },
+  { t: 'Elegís y avanzamos', d: 'Negociación, muestras, seguimiento de producción e inspección antes del embarque.' },
+];
+interface Props { title?: string }
+const { title = 'Cómo funciona' } = Astro.props;
+---
+<section class="section" aria-labelledby="how-title">
+  <div class="wrap">
+    <p class="eyebrow">Proceso</p>
+    <h2 id="how-title" class="mt-2 text-h1-m md:text-h1">{title}</h2>
+    <ol class="mt-10 grid gap-6 md:grid-cols-4">
+      {steps.map((s, i) => (
+        <li class="card">
+          <p class="fig text-river">Paso {i + 1}</p>
+          <h3 class="mt-2 font-sans text-body font-semibold">{s.t}</h3>
+          <p class="mt-2 text-small text-ink-muted">{s.d}</p>
+        </li>
+      ))}
+    </ol>
+  </div>
+</section>

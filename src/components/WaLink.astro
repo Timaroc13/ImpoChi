@@ -1,0 +1,12 @@
+---
+// WhatsApp click-to-chat link. Renders nothing when no number is configured.
+import { SITE, hasWhatsApp } from '../config';
+import { waLink } from '../lib/lead.js';
+interface Props { text?: string; location: string; class?: string; label?: string }
+const { text = 'Hola Octa, quiero hacer una consulta.', location, class: cls = 'btn-secondary', label = 'Escribime por WhatsApp' } = Astro.props;
+---
+{hasWhatsApp && (
+  <a href={waLink(SITE.whatsapp, text)} class={cls} data-wa={location} target="_blank" rel="noopener">
+    {Astro.slots.has('default') ? <slot /> : label}
+  </a>
+)}

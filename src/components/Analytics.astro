@@ -1,0 +1,61 @@
+---
+// Consent Mode v2: everything denied by default; tags load only after the visitor accepts.
+// window.ddTrack(event, params) is the single event API used by the site.
+import { SITE } from '../config';
+const cfg = {
+  ga4: SITE.analytics.ga4,
+  gads: SITE.analytics.gads,
+  gadsLeadLabel: SITE.analytics.gadsLeadLabel,
+  clarity: SITE.analytics.clarity,
+};
+---
+<script is:inline define:vars={{ cfg }}>
+  window.dataLayer = window.dataLayer || [];
+  window.gtag = function () { window.dataLayer.push(arguments); };
+  gtag('consent', 'default', {
+    ad_storage: 'denied', ad_user_data: 'denied', ad_personalization: 'denied',
+    analytics_storage: 'denied', functionality_storage: 'granted', security_storage: 'granted',
+    wait_for_update: 500,
+  });
+  gtag('set', 'ads_data_redaction', true);
+  window.__dd = cfg;
+
+  var KEY = 'dd_consent';
+  function read() { try { return localStorage.getItem(KEY); } catch (e) { return null; } }
+  function loadTags() {
+    if (window.__ddTagsLoaded) return;
+    window.__ddTagsLoaded = true;
+    var first = cfg.ga4 || cfg.gads;
+    if (first) {
+      var s = document.createElement('script');
+      s.async = true;
+      s.src = 'https://www.googletagmanager.com/gtag/js?id=' + encodeURIComponent(first);
+      document.head.appendChild(s);
+      gtag('js', new Date());
+      if (cfg.ga4) gtag('config', cfg.ga4);
+      if (cfg.gads) gtag('config', cfg.gads);
+    }
+    if (cfg.clarity) {
+      (function (c, l, a, r, i, t, y) {
+        c[a] = c[a] || function () { (c[a].q = c[a].q || []).push(arguments); };
+        t = l.createElement(r); t.async = 1; t.src = 'https://www.clarity.ms/tag/' + i;
+        y = l.getElementsByTagName(r)[0]; y.parentNode.insertBefore(t, y);
+      })(window, document, 'clarity', 'script', cfg.clarity);
+    }
+  }
+  window.ddSetConsent = function (granted) {
+    try { localStorage.setItem(KEY, granted ? 'granted' : 'denied'); } catch (e) {}
+    var v = granted ? 'granted' : 'denied';
+    gtag('consent', 'update', { ad_storage: v, ad_user_data: v, ad_personalization: v, analytics_storage: v });
+    if (granted) loadTags();
+  };
+  window.ddTrack = function (name, params) {
+    params = params || {};
+    gtag('event', name, params);
+    if (name === 'generate_lead' && cfg.gads && cfg.gadsLeadLabel) {
+      gtag('event', 'conversion', { send_to: cfg.gads + '/' + cfg.gadsLeadLabel });
+    }
+    if (window.clarity) { try { window.clarity('event', name); } catch (e) {} }
+  };
+  if (read() === 'granted') window.ddSetConsent(true);
+</script>

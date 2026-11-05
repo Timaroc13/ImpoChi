@@ -1,0 +1,9 @@
+---
+import Mark from './Mark.astro';
+interface Props { variant?: 'color' | 'paper'; href?: string }
+const { variant = 'color', href = '/' } = Astro.props;
+---
+<a href={href} class="inline-flex items-center gap-2 no-underline" aria-label="Dos Deltas, inicio">
+  <Mark variant={variant} size={26} />
+  <span class:list={['font-serif text-[26px] leading-none font-semibold', variant === 'paper' ? 'text-paper' : 'text-ink']}>Dos Deltas</span>
+</a>

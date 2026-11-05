@@ -1,0 +1,26 @@
+---
+import { SITE } from '../config';
+import WaLink from './WaLink.astro';
+---
+<section class="section" aria-labelledby="founder-title">
+  <div class="wrap grid items-center gap-10 md:grid-cols-[240px_1fr]">
+    {SITE.founder.photo ? (
+      <img src={SITE.founder.photo} alt="Octavio Martínez" width="240" height="240" loading="lazy" class="aspect-square w-40 object-cover md:w-60" />
+    ) : (
+      <div class="flex aspect-square w-40 items-center justify-center bg-ink md:w-60" aria-hidden="true">
+        <span class="font-serif text-[64px] text-paper">OM</span>
+      </div>
+    )}
+    <div>
+      <p class="eyebrow">Quién te atiende</p>
+      <h2 id="founder-title" class="mt-2 text-h2">Soy Octa, argentino, vivo en Hong Kong.</h2>
+      <p class="mt-4 max-w-[60ch] text-ink">Estoy a una hora de Shenzhen y a dos de Foshan. Trabajo con pocos clientes a la vez y atiendo cada pedido en persona, del lado del comprador.</p>
+      <p class="mt-2 text-small text-ink-muted">{SITE.founder.line}</p>
+      <div class="mt-6 flex flex-wrap gap-4">
+        <a href="/sobre-mi" class="btn-secondary" data-cta="founder-more">Más sobre mí</a>
+        {SITE.founder.linkedin && <a href={SITE.founder.linkedin} class="btn-secondary" target="_blank" rel="noopener">LinkedIn</a>}
+        <WaLink location="founder" class="btn-secondary" />
+      </div>
+    </div>
+  </div>
+</section>

@@ -1,0 +1,24 @@
+---
+import Base from '../layouts/Base.astro';
+import { TERMS } from '../config';
+import { fmtUSD } from '../lib/format.js';
+---
+<Base title="Consulta recibida | Dos Deltas" description="Recibí tu consulta." noindex og="home">
+  <section class="section">
+    <div class="wrap max-w-[760px] prose-dd">
+      <p class="eyebrow">Consulta recibida</p>
+      <h1 class="mt-4 mb-6 text-h1-m md:text-h1">Gracias por escribirme. Te debo una respuesta honesta.</h1>
+      <p>Trabajo con pedidos desde <span class="fig">{fmtUSD(TERMS.minOrder)}</span>. Por debajo de ese monto, mi honorario y una inspección te cuestan más de lo que te ahorran, y no sería justo cobrártelos.</p>
+      <h2>Para compras chicas, esto te va a servir más</h2>
+      <ol>
+        <li>Comprá en Alibaba con <strong>Trade Assurance</strong>: la plataforma retiene el pago y te cubre si el producto no llega o no coincide con lo acordado.</li>
+        <li>Filtrá por proveedores con <strong>fábrica verificada</strong> y pedí fotos o una videollamada en planta antes de pagar.</li>
+        <li>Pedí una <strong>muestra pagada</strong> antes del pedido, y que la proforma diga las especificaciones por escrito.</li>
+        <li>Por <strong>courier</strong> podés traer hasta USD 3.000 FOB y 50 kg por envío, con menos trámite que el régimen general.</li>
+        <li>Calculá el costo puesto en Argentina antes de comprar. <a href="/recursos/costo-importar-china-argentina">Acá explico cómo</a>.</li>
+      </ol>
+      <p>Guardé tu consulta. Si tu pedido crece, o querés juntar varios productos para llegar al mínimo, escribime y lo vemos.</p>
+      <p><a href="/">Volver al inicio</a></p>
+    </div>
+  </section>
+</Base>

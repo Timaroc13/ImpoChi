@@ -1,0 +1,86 @@
+---
+import '../styles/global.css';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+import Analytics from '../components/Analytics.astro';
+import CookieBanner from '../components/CookieBanner.astro';
+import Tracking from '../components/Tracking.astro';
+import WaLink from '../components/WaLink.astro';
+import { SITE } from '../config';
+
+export type Crumb = { name: string; href: string };
+interface Props {
+  title: string;
+  description: string;
+  og?: string; // file name under /og, without extension
+  noindex?: boolean;
+  schema?: Record<string, unknown>[];
+  crumbs?: Crumb[];
+  waText?: string;
+  hideFloatingWa?: boolean;
+}
+const { title, description, og = 'home', noindex = false, schema = [], crumbs, waText, hideFloatingWa = false } = Astro.props;
+const site = Astro.site!;
+const path = Astro.url.pathname.replace(/\.html$/, '').replace(/\/index$/, '') || '/';
+const canonical = new URL(path, site).href;
+const ogImage = new URL(`/og/${og}.png`, site).href;
+
+const graph: Record<string, unknown>[] = [...schema];
+if (crumbs && crumbs.length) {
+  graph.push({
+    '@type': 'BreadcrumbList',
+    itemListElement: [{ name: 'Inicio', href: '/' }, ...crumbs].map((c, i) => ({
+      '@type': 'ListItem', position: i + 1, name: c.name, item: new URL(c.href, site).href,
+    })),
+  });
+}
+const jsonld = graph.length ? JSON.stringify({ '@context': 'https://schema.org', '@graph': graph }) : null;
+---
+<!doctype html>
+<html lang="es-AR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>{title}</title>
+  <meta name="description" content={description} />
+  <link rel="canonical" href={canonical} />
+  <link rel="alternate" hreflang="es-AR" href={canonical} />
+  <link rel="alternate" hreflang="x-default" href={canonical} />
+  {noindex && <meta name="robots" content="noindex, follow" />}
+  <meta name="theme-color" content="#f5f2ec" />
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+  <link rel="sitemap" href="/sitemap-index.xml" />
+
+  <meta property="og:type" content="website" />
+  <meta property="og:locale" content={SITE.locale} />
+  <meta property="og:site_name" content="Dos Deltas" />
+  <meta property="og:title" content={title} />
+  <meta property="og:description" content={description} />
+  <meta property="og:url" content={canonical} />
+  <meta property="og:image" content={ogImage} />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta name="twitter:card" content="summary_large_image" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@500&family=IBM+Plex+Sans:wght@400;600&family=Source+Serif+4:opsz,wght@8..60,600&display=swap" />
+
+  {jsonld && <script type="application/ld+json" set:html={jsonld} />}
+  <Analytics />
+</head>
+<body class="min-h-screen">
+  <Header />
+  <main id="contenido">
+    <slot />
+  </main>
+  <Footer />
+  {!hideFloatingWa && (
+    <div class="fixed right-4 bottom-4 z-30 md:hidden">
+      <WaLink location="floating" text={waText} class="btn-primary min-h-12 px-4 shadow-none" label="WhatsApp" />
+    </div>
+  )}
+  <CookieBanner />
+  <Tracking />
+</body>
+</html>

@@ -1,0 +1,44 @@
+---
+import Base from '../layouts/Base.astro';
+import { SITE, TERMS } from '../config';
+import { fmtUSD } from '../lib/format.js';
+---
+<Base
+  title="Términos del servicio | Dos Deltas"
+  description="Alcance del servicio de Dos Deltas, exclusiones, honorarios y confidencialidad."
+  og="home"
+  crumbs={[{ name: 'Términos', href: '/terminos' }]}
+>
+  <section class="section">
+    <div class="wrap prose-dd">
+      <p class="eyebrow">Legal · Vigente desde noviembre de 2026</p>
+      <h1 class="mt-4 mb-10 text-h1-m md:text-h1">Términos del servicio</h1>
+      <p>Estos términos resumen cómo trabajo. Cada proyecto se rige además por una propuesta escrita que firmamos antes de empezar; si hay diferencias, vale la propuesta.</p>
+
+      <h2>1. Qué hago</h2>
+      <p>Busco, comparo y verifico fábricas en el sur de China para tu pedido; negocio condiciones, hago seguimiento de la producción y coordino una inspección antes del embarque. Actúo como tu representante de compras, del lado del comprador.</p>
+
+      <h2>2. Qué no hago</h2>
+      <ul>
+        <li>Despacho de aduana ni flete internacional: los contratás con tu despachante y tu forwarder.</li>
+        <li>No soy vendedor de la mercadería ni recibo el dinero de tu compra: le pagás directo a la fábrica.</li>
+        <li>No garantizo el producto, los plazos de la fábrica ni el resultado comercial de tu importación. La fábrica es responsable de su mercadería.</li>
+        <li>No asesoro en materia impositiva, aduanera ni legal. Las estimaciones de costo puesto en Argentina son orientativas.</li>
+      </ul>
+
+      <h2>3. Honorarios</h2>
+      <p>Búsqueda: tarifa fija de {fmtUSD(TERMS.searchFee)} ({fmtUSD(TERMS.searchFeeMachinery)} en maquinaria), no reembolsable, por {TERMS.quotesMin} a {TERMS.quotesMax} cotizaciones comparadas. Si la búsqueda no logra al menos dos cotizaciones que cumplan las especificaciones acordadas, te lo informo y acordamos ajustar el pedido o te devuelvo la tarifa. Se descuenta del honorario de ejecución si el pedido se hace conmigo dentro de los {TERMS.creditDays} días.</p>
+      <p>Ejecución: {TERMS.execMin} a {TERMS.execMax} % del valor FOB del pedido, mínimo {fmtUSD(TERMS.execFloor)}, mitad con la orden de compra y mitad cuando aprueba la inspección. Los costos de terceros (inspecciones, muestras, courier) se pasan al costo. No cobro comisiones a las fábricas.</p>
+      <p>Pedido mínimo: {fmtUSD(TERMS.minOrder)}.</p>
+
+      <h2>4. Confidencialidad y no elusión</h2>
+      <p>Trato como confidencial la información que me des sobre tu producto y tu empresa. Los datos de identificación de las fábricas se comparten cuando avanzamos con la ejecución y quedan sujetos a un acuerdo de no elusión de 24 meses.</p>
+
+      <h2>5. Ley aplicable</h2>
+      <p>La ley aplicable y la jurisdicción se fijan en la propuesta escrita de cada proyecto.</p>
+
+      <h2>Contacto</h2>
+      <p><a href={`mailto:${SITE.email}`}>{SITE.email}</a></p>
+    </div>
+  </section>
+</Base>

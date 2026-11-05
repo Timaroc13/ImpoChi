@@ -1,0 +1,42 @@
+---
+import { TERMS } from '../config';
+import { fmtUSD } from '../lib/format.js';
+interface Props { compact?: boolean }
+const { compact = false } = Astro.props;
+---
+<section class="section bg-paper-raised border-y border-line" aria-labelledby="fees-title">
+  <div class="wrap grid gap-10 md:grid-cols-[1fr_1.3fr]">
+    <div>
+      <p class="eyebrow">Honorarios</p>
+      <h2 id="fees-title" class="mt-2 text-h1-m md:text-h1">Cómo cobro</h2>
+      <p class="mt-4 text-ink-muted">Todo por escrito antes de empezar. Trabajo para vos, no para las fábricas.</p>
+    </div>
+    <div>
+      <table class="w-full border-collapse text-left">
+        <caption class="sr-only">Honorarios de Dos Deltas</caption>
+        <tbody>
+          <tr class="border-t border-line">
+            <th scope="row" class="py-4 pr-4 align-top font-semibold">Búsqueda</th>
+            <td class="py-4 text-right align-top"><span class="fig">{fmtUSD(TERMS.searchFee)}</span><br /><span class="text-small text-ink-muted">maquinaria <span class="fig text-small">{fmtUSD(TERMS.searchFeeMachinery)}</span></span></td>
+          </tr>
+          <tr class="border-t border-line">
+            <th scope="row" class="py-4 pr-4 align-top font-semibold">Ejecución</th>
+            <td class="py-4 text-right align-top"><span class="fig">{TERMS.execMin}–{TERMS.execMax} %</span><br /><span class="text-small text-ink-muted">del pedido, mínimo <span class="fig text-small">{fmtUSD(TERMS.execFloor)}</span></span></td>
+          </tr>
+          <tr class="border-y border-line">
+            <th scope="row" class="py-4 pr-4 align-top font-semibold">Pedido mínimo</th>
+            <td class="py-4 text-right align-top"><span class="fig">{fmtUSD(TERMS.minOrder)}</span></td>
+          </tr>
+        </tbody>
+      </table>
+      {!compact && (
+        <ul class="mt-6 space-y-2 text-ink">
+          <li>La búsqueda cubre {TERMS.quotesMin} a {TERMS.quotesMax} cotizaciones comparadas. Si hacés el pedido conmigo dentro de los {TERMS.creditDays} días, se descuenta del honorario de ejecución.</li>
+          <li>La ejecución se paga mitad con la orden de compra y mitad cuando aprueba la inspección.</li>
+          <li>No cobro comisiones a las fábricas.</li>
+          <li>Vos le pagás directo a la fábrica. Nunca recibo el dinero de tu mercadería.</li>
+        </ul>
+      )}
+    </div>
+  </div>
+</section>

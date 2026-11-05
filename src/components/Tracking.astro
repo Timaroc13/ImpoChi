@@ -1,0 +1,39 @@
+---
+// Site-wide delegated event tracking + first-touch UTM capture.
+---
+<script>
+  const track = (name: string, params: Record<string, unknown> = {}) => (window as any).ddTrack?.(name, params);
+
+  // First-touch attribution, kept 90 days in this browser only.
+  const ATTR_KEYS = ['utm_source', 'utm_medium', 'utm_campaign', 'utm_term', 'utm_content', 'gclid'];
+  try {
+    const q = new URLSearchParams(location.search);
+    if (ATTR_KEYS.some((k) => q.get(k))) {
+      const prev = JSON.parse(localStorage.getItem('dd_attr') || 'null');
+      if (!prev || Date.now() - prev.ts > 90 * 864e5) {
+        const attr: Record<string, unknown> = { ts: Date.now(), landing_page: location.pathname };
+        ATTR_KEYS.forEach((k) => { const v = q.get(k); if (v) attr[k] = v.slice(0, 200); });
+        localStorage.setItem('dd_attr', JSON.stringify(attr));
+      }
+    }
+  } catch {}
+
+  document.addEventListener('click', (e) => {
+    const el = (e.target as HTMLElement).closest('a,button') as HTMLElement | null;
+    if (!el) return;
+    if (el.dataset.wa) track('whatsapp_click', { location: el.dataset.wa });
+    if (el.dataset.cta) track('cta_click', { cta_id: el.dataset.cta });
+    if (el.dataset.sample) track('sample_download', { file: el.dataset.sample });
+  });
+
+  document.querySelectorAll<HTMLDetailsElement>('details[data-faq]').forEach((d) =>
+    d.addEventListener('toggle', () => { if (d.open) track('faq_open', { question: d.dataset.faq }); }),
+  );
+
+  let scrolled = false;
+  addEventListener('scroll', () => {
+    if (scrolled) return;
+    const h = document.documentElement;
+    if ((h.scrollTop + innerHeight) / h.scrollHeight >= 0.75) { scrolled = true; track('scroll_75'); }
+  }, { passive: true });
+</script>

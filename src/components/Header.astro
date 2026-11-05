@@ -1,0 +1,36 @@
+---
+import Logo from './Logo.astro';
+import { VERTICALS } from '../data/verticals';
+const path = Astro.url.pathname.replace(/\.html$/, '');
+const links = [
+  ...VERTICALS.map((v) => ({ href: `/${v.slug}`, label: v.label })),
+  { href: '/como-trabajamos', label: 'Cómo trabajo' },
+  { href: '/sobre-mi', label: 'Sobre mí' },
+];
+---
+<header class="border-b border-line bg-paper">
+  <a href="#contenido" class="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:bg-paper-raised focus:p-2">Saltar al contenido</a>
+  <div class="wrap flex items-center justify-between gap-6 py-4">
+    <Logo />
+    <nav aria-label="Principal" class="hidden lg:block">
+      <ul class="flex items-center gap-6 text-small font-semibold">
+        {links.map((l) => (
+          <li><a href={l.href} class:list={['no-underline hover:underline', path === l.href ? 'text-river' : 'text-ink']} aria-current={path === l.href ? 'page' : undefined}>{l.label}</a></li>
+        ))}
+      </ul>
+    </nav>
+    <div class="flex items-center gap-4">
+      <a href="/cotizacion" class="btn-primary hidden min-h-10 px-4 py-2 sm:inline-flex" data-cta="header">Pedí tu cotización</a>
+      <details class="relative lg:hidden">
+        <summary class="cursor-pointer list-none rounded-sm border border-line px-4 py-2 text-small font-semibold">Menú</summary>
+        <nav aria-label="Principal (móvil)" class="absolute right-0 z-20 mt-2 w-64 border border-line bg-paper-raised p-4">
+          <ul class="space-y-2">
+            {links.map((l) => <li><a href={l.href} class="block py-1 text-ink no-underline">{l.label}</a></li>)}
+            <li><a href="/preguntas-frecuentes" class="block py-1 text-ink no-underline">Preguntas frecuentes</a></li>
+            <li class="pt-2"><a href="/cotizacion" class="btn-primary w-full" data-cta="menu">Pedí tu cotización</a></li>
+          </ul>
+        </nav>
+      </details>
+    </div>
+  </div>
+</header>

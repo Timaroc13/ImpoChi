@@ -1,0 +1,28 @@
+---
+---
+<div id="cookie-banner" hidden class="fixed inset-x-0 bottom-0 z-40 border-t border-line bg-paper-raised">
+  <div class="wrap flex flex-col gap-4 py-4 md:flex-row md:items-center md:justify-between">
+    <p class="max-w-[70ch] text-small text-ink">
+      Uso cookies de medición (Google Analytics, Google Ads y Microsoft Clarity) para saber qué páginas sirven. El sitio funciona igual si las rechazás. <a href="/privacidad#cookies">Más información</a>.
+    </p>
+    <div class="flex shrink-0 gap-2">
+      <button type="button" class="btn-secondary min-h-10 px-4 py-2" data-consent="denied">Rechazar</button>
+      <button type="button" class="btn-primary min-h-10 px-4 py-2" data-consent="granted">Aceptar</button>
+    </div>
+  </div>
+</div>
+<script>
+  const banner = document.getElementById('cookie-banner')!;
+  let stored: string | null = null;
+  try { stored = localStorage.getItem('dd_consent'); } catch {}
+  if (!stored) banner.hidden = false;
+  banner.querySelectorAll<HTMLButtonElement>('[data-consent]').forEach((b) =>
+    b.addEventListener('click', () => {
+      (window as any).ddSetConsent?.(b.dataset.consent === 'granted');
+      banner.hidden = true;
+    }),
+  );
+  document.querySelectorAll('[data-cookie-settings]').forEach((b) =>
+    b.addEventListener('click', () => { banner.hidden = false; }),
+  );
+</script>

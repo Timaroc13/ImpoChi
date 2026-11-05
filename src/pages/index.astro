@@ -1,0 +1,84 @@
+---
+import Base from '../layouts/Base.astro';
+import ValueProps from '../components/ValueProps.astro';
+import HowItWorks from '../components/HowItWorks.astro';
+import Fees from '../components/Fees.astro';
+import FounderStrip from '../components/FounderStrip.astro';
+import QuoteForm from '../components/QuoteForm.astro';
+import FaqList from '../components/FaqList.astro';
+import FinalCta from '../components/FinalCta.astro';
+import WaLink from '../components/WaLink.astro';
+import SampleQuote from '../components/SampleQuote.astro';
+import MoneyFlow from '../components/MoneyFlow.astro';
+import { VERTICALS } from '../data/verticals';
+import { FAQ_GENERAL } from '../data/faq';
+import { orgSchema, personSchema, serviceSchema, faqSchema } from '../lib/schema';
+import { fmtUSD } from '../lib/format.js';
+
+const site = Astro.site!;
+const homeFaq = FAQ_GENERAL.filter((f) => ['¿Cuánto cobrás?', '¿Hay pedido mínimo?', '¿Ustedes importan por mí?', '¿Cómo le pago a la fábrica y qué pasa con el anticipo?', '¿Por qué no voy directo a Alibaba?'].includes(f.q));
+---
+<Base
+  title="Sourcing en China para pymes argentinas | Dos Deltas"
+  description="Cotizaciones comparables de fábricas verificadas del sur de China, con costo puesto en Argentina. Sin comisiones de fábrica. Pedí la tuya."
+  schema={[orgSchema(site), personSchema(site), serviceSchema(site, 'Sourcing en el sur de China para pymes argentinas', '/'), faqSchema(homeFaq)]}
+>
+  <section class="pt-10 md:pt-20">
+    <div class="wrap">
+      <p class="eyebrow">Del lado del comprador · Sur de China</p>
+      <h1 class="mt-4 max-w-[20ch] text-display-m md:text-display">Comprá directo a fábricas del sur de China, con alguien de confianza del otro lado.</h1>
+      <p class="mt-6 max-w-[58ch] text-[18px] leading-[28px] text-ink">Te consigo 2 a 4 cotizaciones comparables de fábricas verificadas, con el costo puesto en Argentina. Vos le pagás directo a la fábrica; yo no toco tu plata.</p>
+      <div class="mt-6 flex flex-wrap gap-4">
+        <a href="/cotizacion" class="btn-primary" data-cta="hero-home">Pedí tu cotización</a>
+        <WaLink location="hero-home" />
+      </div>
+      <p class="mt-6 text-small text-ink-muted">Base en Hong Kong · A 1 hora de Shenzhen · Sin comisiones de fábricas</p>
+    </div>
+    <hr class="equator mt-10 md:mt-20" />
+  </section>
+
+  <ValueProps />
+
+  <section class="section bg-paper-raised border-y border-line" aria-labelledby="rubros-title">
+    <div class="wrap">
+      <p class="eyebrow">Rubros</p>
+      <h2 id="rubros-title" class="mt-2 text-h1-m md:text-h1">Donde el sur de China es fuerte</h2>
+      <ul class="mt-10 grid gap-6 md:grid-cols-3">
+        {VERTICALS.map((v) => (
+          <li class="flex flex-col rounded-md border border-line bg-paper p-6">
+            <h3 class="text-h2">{v.label}</h3>
+            <p class="mt-2 flex-1 text-small text-ink-muted">{v.examples.slice(0, 4).map((e) => e.name).join(' · ')}</p>
+            <p class="mt-4 text-small">Búsqueda <span class="fig text-small">{fmtUSD(v.searchFee)}</span></p>
+            <a href={`/${v.slug}`} class="mt-4 font-semibold" data-cta={`rubro-${v.slug}`}>Ver {v.label.toLowerCase()}</a>
+          </li>
+        ))}
+      </ul>
+    </div>
+  </section>
+
+  <section class="section" aria-labelledby="compare-title">
+    <div class="wrap">
+      <p class="eyebrow">Lo que recibís</p>
+      <h2 id="compare-title" class="mt-2 max-w-[28ch] text-h1-m md:text-h1">Elegí fábrica con datos: mismas especificaciones, costo puesto en Argentina.</h2>
+      <p class="mt-4 max-w-[64ch] text-ink-muted">El FOB más barato no siempre es la compra más barata. Cada cotización llega con plazo, mínimo, resultado de la auditoría y el costo estimado puesto en tu depósito.</p>
+      <div class="mt-10"><SampleQuote /></div>
+      <hr class="equator my-10" />
+      <div class="grid gap-10 md:grid-cols-2">
+        <div>
+          <h3 class="text-h2">Recomendación por escrito</h3>
+          <p class="mt-2 text-ink">Te digo qué fábrica elegiría yo y por qué, con los riesgos de cada una. La decisión es tuya.</p>
+          <p class="mt-4"><a href="/recursos/costo-importar-china-argentina">Cómo calculo el costo puesto en Argentina</a></p>
+        </div>
+        <MoneyFlow />
+      </div>
+    </div>
+  </section>
+
+  <HowItWorks />
+  <Fees />
+  <FounderStrip />
+  <QuoteForm />
+  <FaqList items={homeFaq} />
+  <p class="wrap -mt-6 pb-10 text-small"><a href="/preguntas-frecuentes">Ver todas las preguntas</a></p>
+  <FinalCta />
+</Base>

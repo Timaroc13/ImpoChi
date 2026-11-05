@@ -1,0 +1,92 @@
+---
+import Base from '../layouts/Base.astro';
+import FinalCta from '../components/FinalCta.astro';
+import WaLink from '../components/WaLink.astro';
+import { SITE } from '../config';
+import { personSchema, orgSchema } from '../lib/schema';
+const site = Astro.site!;
+const video = SITE.founder.video;
+const isEmbed = /youtube\.com\/embed|player\.vimeo\.com/.test(video);
+---
+<Base
+  title="Sobre mí: Octavio Martínez | Dos Deltas"
+  description="Soy Octa, argentino, vivo en Hong Kong. Compro para pymes argentinas en fábricas del sur de China, del lado del comprador y sin comisiones de fábrica."
+  og="sobre-mi"
+  crumbs={[{ name: 'Sobre mí', href: '/sobre-mi' }]}
+  schema={[personSchema(site), orgSchema(site)]}
+>
+  <section class="pt-10 md:pt-20">
+    <div class="wrap grid gap-10 md:grid-cols-[1.4fr_1fr] md:items-end">
+      <div>
+        <p class="eyebrow">Sobre mí</p>
+        <h1 class="mt-4 text-display-m md:text-display">Soy Octa, argentino, vivo en Hong Kong.</h1>
+        <p class="mt-4 text-small text-ink-muted">{SITE.founder.line}</p>
+      </div>
+      {SITE.founder.photo ? (
+        <figure>
+          <img src={SITE.founder.photo} alt="Octavio Martínez" width="480" height="480" class="aspect-square w-full max-w-[360px] object-cover" />
+        </figure>
+      ) : (
+        <div class="flex aspect-square w-full max-w-[280px] items-center justify-center bg-ink" aria-hidden="true">
+          <span class="font-serif text-[96px] text-paper">OM</span>
+        </div>
+      )}
+    </div>
+    <hr class="equator mt-10 md:mt-20" />
+  </section>
+
+  <section class="section">
+    <div class="wrap grid gap-10 md:grid-cols-[1.4fr_1fr]">
+      <div class="prose-dd">
+        <h2 class="!mt-0">Por qué hago esto</h2>
+        <p>Muchas pymes argentinas compran en China a través de revendedores que se presentan como fábricas, pagan anticipos sin haber visto la planta y descubren el costo real recién en el puerto. Otras ni lo intentan, porque no tienen a nadie de confianza del otro lado.</p>
+        <p>Vivo en Hong Kong, a una hora de Shenzhen y Dongguan y a dos de Foshan, donde se fabrica buena parte de la maquinaria liviana, el packaging y el mobiliario que se importa en Argentina. Hablo como vos, entiendo cómo se paga una importación con las reglas del BCRA y sé lo que pesa el costo puesto en el depósito.</p>
+
+        <h2>Qué me hace confiable</h2>
+        <ul>
+          <li>Estoy en el sur de China y visito las fábricas cuando el pedido lo justifica.</li>
+          <li>Tengo experiencia en operaciones y análisis de datos en empresas tecnológicas en Asia: armo comparaciones con números, no con impresiones.</li>
+          <li>Estudié en el ITBA (Instituto Tecnológico de Buenos Aires) y en London Business School.</li>
+          <li>Trabajo del lado del comprador. No cobro comisiones a las fábricas, y lo pongo por escrito.</li>
+          <li>Nunca recibo el dinero de tu mercadería: le pagás directo a la fábrica.</li>
+        </ul>
+
+        <h2>Cómo trabajo</h2>
+        <p>En persona y con pocos clientes a la vez. Cada pedido lo atiendo yo, de la primera llamada a la inspección antes del embarque. Para inspecciones fuera de mi alcance trabajo con empresas de inspección independientes y te lo digo.</p>
+        <p>Respondo de lunes a viernes, de 9 a 19 h de Argentina, por WhatsApp, email o videollamada.</p>
+      </div>
+      <aside class="space-y-6">
+        {video && (
+          <figure class="card">
+            <p class="eyebrow">Presentación en video</p>
+            {isEmbed ? (
+              <iframe class="mt-4 aspect-video w-full" src={video} title="Presentación de Octa" loading="lazy" allow="encrypted-media; picture-in-picture" allowfullscreen></iframe>
+            ) : (
+              <video class="mt-4 w-full" src={video} controls preload="none" playsinline></video>
+            )}
+          </figure>
+        )}
+        <div class="card">
+          <p class="eyebrow">Contacto directo</p>
+          <ul class="mt-4 space-y-2">
+            <li><a href={`mailto:${SITE.email}`}>{SITE.email}</a></li>
+            {SITE.founder.linkedin && <li><a href={SITE.founder.linkedin} target="_blank" rel="noopener">LinkedIn</a></li>}
+          </ul>
+          <div class="mt-6 flex flex-col gap-4">
+            <a href="/cotizacion" class="btn-primary" data-cta="sobre-mi">Pedí tu cotización</a>
+            <WaLink location="sobre-mi" />
+          </div>
+        </div>
+        {SITE.hk.company && (
+          <div class="card">
+            <p class="eyebrow">Empresa</p>
+            <p class="mt-4">{SITE.hk.company}</p>
+            {SITE.hk.number && <p class="text-small text-ink-muted">Hong Kong CR No. <span class="fig text-small">{SITE.hk.number}</span></p>}
+            {SITE.hk.address && <p class="text-small text-ink-muted">{SITE.hk.address}</p>}
+          </div>
+        )}
+      </aside>
+    </div>
+  </section>
+  <FinalCta />
+</Base>

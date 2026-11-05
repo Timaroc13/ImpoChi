@@ -1,0 +1,41 @@
+---
+import Logo from './Logo.astro';
+import { SITE } from '../config';
+import { VERTICALS } from '../data/verticals';
+const year = new Date().getFullYear();
+---
+<footer class="bg-ink text-paper">
+  <div class="wrap grid gap-10 py-10 md:grid-cols-[1.4fr_1fr_1fr] md:py-20">
+    <div>
+      <Logo variant="paper" />
+      <p class="mt-4 max-w-[40ch] text-small text-paper/80">{SITE.tagline}</p>
+      <p class="mt-4 text-small text-paper/80">{SITE.founder.line}</p>
+      <p class="mt-2 text-small text-paper/80">
+        {SITE.hk.company ? <>{SITE.hk.company}{SITE.hk.number && <> · CR No. <span class="font-mono">{SITE.hk.number}</span></>}</> : 'Hong Kong'}
+        {SITE.hk.address && <><br />{SITE.hk.address}</>}
+      </p>
+    </div>
+    <nav aria-label="Rubros">
+      <p class="eyebrow text-paper/70">Rubros</p>
+      <ul class="mt-4 space-y-2 text-small">
+        {VERTICALS.map((v) => <li><a href={`/${v.slug}`} class="text-paper">{v.label}</a></li>)}
+        <li><a href="/recursos/costo-importar-china-argentina" class="text-paper">Costo de importar de China</a></li>
+      </ul>
+    </nav>
+    <nav aria-label="Información">
+      <p class="eyebrow text-paper/70">Contacto</p>
+      <ul class="mt-4 space-y-2 text-small">
+        <li><a href={`mailto:${SITE.email}`} class="text-paper">{SITE.email}</a></li>
+        <li class="text-paper/80">{SITE.hours}</li>
+        <li><a href="/como-trabajamos" class="text-paper">Cómo trabajo</a></li>
+        <li><a href="/preguntas-frecuentes" class="text-paper">Preguntas frecuentes</a></li>
+        <li><a href="/privacidad" class="text-paper">Política de privacidad</a></li>
+        <li><a href="/terminos" class="text-paper">Términos</a></li>
+        <li><button type="button" class="cursor-pointer text-paper underline underline-offset-2" data-cookie-settings>Configurar cookies</button></li>
+      </ul>
+    </nav>
+  </div>
+  <div class="border-t border-paper/20">
+    <p class="wrap py-4 text-small text-paper/70">© {year} Dos Deltas. No hago despacho de aduana ni flete internacional.</p>
+  </div>
+</footer>

@@ -1,0 +1,121 @@
+---
+import Base from '../layouts/Base.astro';
+import HowItWorks from '../components/HowItWorks.astro';
+import Fees from '../components/Fees.astro';
+import MoneyFlow from '../components/MoneyFlow.astro';
+import SampleQuote from '../components/SampleQuote.astro';
+import FinalCta from '../components/FinalCta.astro';
+import { TERMS } from '../config';
+import { fmtUSD } from '../lib/format.js';
+import { orgSchema } from '../lib/schema';
+---
+<Base
+  title="Cómo trabajo: proceso, honorarios y pagos | Dos Deltas"
+  description="Proceso en 4 pasos, honorarios fijos por escrito, pago directo a la fábrica e inspección antes del saldo. Sin comisiones de fábrica. Pedido mínimo USD 10.000."
+  og="como-trabajamos"
+  crumbs={[{ name: 'Cómo trabajo', href: '/como-trabajamos' }]}
+  schema={[orgSchema(Astro.site!)]}
+>
+  <section class="pt-10 md:pt-20">
+    <div class="wrap">
+      <p class="eyebrow">Cómo trabajo</p>
+      <h1 class="mt-4 max-w-[22ch] text-display-m md:text-display">Del lado del comprador, por escrito.</h1>
+      <p class="mt-6 max-w-[60ch] text-[18px] leading-[28px]">Trabajo para vos, no para las fábricas. Te digo antes de empezar cuánto cobro, qué hago y qué no hago.</p>
+    </div>
+    <hr class="equator mt-10 md:mt-20" />
+  </section>
+
+  <HowItWorks title="El proceso, paso a paso" />
+
+  <section class="section" aria-labelledby="money-title">
+    <div class="wrap grid gap-10 md:grid-cols-2">
+      <div class="prose-dd">
+        <p class="eyebrow">Pagos</p>
+        <h2 id="money-title" class="!mt-2 text-h1-m md:text-h1">Vos le pagás directo a la fábrica</h2>
+        <p>Nunca recibo el dinero de tu mercadería. La transferencia va de tu banco a la cuenta corporativa de la fábrica, que verifico contra su licencia comercial antes de que pagues.</p>
+        <p>Las fábricas chinas suelen pedir 30 % de anticipo. El BCRA permite pagar importaciones al contado con documentos de embarque, pero todavía restringe los pagos antes del embarque (salvo hasta 30 % FOB en bienes de capital). Negocio condiciones que tu banco pueda cursar:</p>
+        <ul>
+          <li>Pago contra documentos de embarque, con una seña chica pagada con fondos propios en el exterior si la tenés.</li>
+          <li>Anticipo atado a un hito verificable, como la aprobación de la muestra de producción.</li>
+          <li>Carta de crédito, en pedidos grandes.</li>
+        </ul>
+        <p class="text-small text-ink-muted">Confirmá siempre con tu banco cómo cursa el pago según tu posición arancelaria.</p>
+      </div>
+      <MoneyFlow />
+    </div>
+  </section>
+
+  <section class="section bg-paper-raised border-y border-line" aria-labelledby="deliver-title">
+    <div class="wrap">
+      <p class="eyebrow">Entregables</p>
+      <h2 id="deliver-title" class="mt-2 text-h1-m md:text-h1">Qué recibís en cada etapa</h2>
+      <div class="mt-10 grid gap-6 md:grid-cols-3">
+        <div class="card bg-paper">
+          <h3 class="text-h2">Búsqueda</h3>
+          <p class="mt-1 fig text-ink-muted">{fmtUSD(TERMS.searchFee)} · {fmtUSD(TERMS.searchFeeMachinery)} maquinaria</p>
+          <ul class="mt-4 space-y-2 text-small">
+            <li>Ficha de especificaciones cerrada con vos</li>
+            <li>Contacto con 4 a 8 fábricas</li>
+            <li>{TERMS.quotesMin} a {TERMS.quotesMax} cotizaciones comparadas en una tabla</li>
+            <li>Perfil, licencia y fotos de cada fábrica</li>
+            <li>Costo estimado puesto en Argentina</li>
+            <li>Mi recomendación por escrito</li>
+          </ul>
+        </div>
+        <div class="card bg-paper">
+          <h3 class="text-h2">Ejecución</h3>
+          <p class="mt-1 fig text-ink-muted">{TERMS.execMin}–{TERMS.execMax} % · mínimo {fmtUSD(TERMS.execFloor)}</p>
+          <ul class="mt-4 space-y-2 text-small">
+            <li>Negociación de precio, plazos y condiciones de pago</li>
+            <li>Revisión de la proforma y del contrato</li>
+            <li>Muestras y aprobación</li>
+            <li>Seguimiento de producción con fotos</li>
+            <li>Documentación de embarque para tu despachante</li>
+          </ul>
+        </div>
+        <div class="card bg-paper">
+          <h3 class="text-h2">Inspección</h3>
+          <p class="mt-1 text-small text-ink-muted">Antes del saldo</p>
+          <ul class="mt-4 space-y-2 text-small">
+            <li>Inspección previa al embarque, en persona o con una empresa independiente</li>
+            <li>Informe con fotos, medidas y defectos encontrados</li>
+            <li>La segunda mitad de mi honorario se cobra recién cuando aprueba</li>
+            <li>El costo de una inspección de terceros se pasa al costo, sin margen oculto</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" aria-labelledby="sample-title">
+    <div class="wrap">
+      <p class="eyebrow">Ejemplo</p>
+      <h2 id="sample-title" class="mt-2 text-h1-m md:text-h1">Así se ve una comparación</h2>
+      <div class="mt-10"><SampleQuote /></div>
+      <p class="mt-6"><a href="/muestras/comparacion-cotizaciones-ejemplo.pdf" data-sample="comparacion" download>Descargá el ejemplo en PDF</a></p>
+    </div>
+  </section>
+
+  <Fees />
+
+  <section class="section" aria-labelledby="scope-title">
+    <div class="wrap grid gap-10 md:grid-cols-2">
+      <div>
+        <h2 id="scope-title" class="text-h1-m md:text-h1">Lo que no hago</h2>
+        <ul class="mt-6 space-y-2 border-t border-line pt-4">
+          <li>Despacho de aduana: lo hace tu despachante.</li>
+          <li>Flete internacional: lo contratás con tu forwarder.</li>
+          <li>Pedidos de menos de <span class="fig">{fmtUSD(TERMS.minOrder)}</span>.</li>
+          <li>Garantías sobre el producto: controlo antes de que pagues el saldo, pero la fábrica es responsable de su mercadería.</li>
+          <li>Comisiones de fábricas: no las cobro, por escrito.</li>
+        </ul>
+      </div>
+      <div>
+        <h2 class="text-h1-m md:text-h1">Confidencialidad</h2>
+        <p class="mt-6 border-t border-line pt-4">Firmamos un acuerdo de confidencialidad antes de que me mandes planos o artes. Las cotizaciones llegan con el perfil, la auditoría y las fotos de cada fábrica; el nombre y el contacto se comparten cuando avanzamos con la ejecución, bajo un acuerdo de no elusión de 24 meses.</p>
+      </div>
+    </div>
+  </section>
+
+  <FinalCta />
+</Base>
