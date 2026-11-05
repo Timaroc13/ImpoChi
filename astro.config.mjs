@@ -6,7 +6,7 @@ import tailwindcss from '@tailwindcss/vite';
 const NOINDEX = ['/gracias', '/gracias-chico', '/muestras/'];
 
 export default defineConfig({
-  site: process.env.SITE_URL || 'https://dosdeltas.com',
+  site: process.env.SITE_URL || 'https://dos-deltas.com',
   trailingSlash: 'never',
   build: { format: 'file' },
   integrations: [

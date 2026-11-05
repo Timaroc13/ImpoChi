@@ -17,7 +17,7 @@ export const SITE = {
     video: clean(env.PUBLIC_FOUNDER_VIDEO),
     linkedin: clean(env.PUBLIC_LINKEDIN_URL),
   },
-  email: clean(env.PUBLIC_CONTACT_EMAIL) || 'hola@dosdeltas.com',
+  email: clean(env.PUBLIC_CONTACT_EMAIL) || 'hola@dos-deltas.com',
   whatsapp: clean(env.PUBLIC_WHATSAPP_NUMBER).replace(/\D/g, ''),
   // Booking page. A cal.com URL is embedded inline on /gracias; any other URL (Google Calendar
   // appointment page, Calendly…) is shown as a button.

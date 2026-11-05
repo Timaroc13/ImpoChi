@@ -12,8 +12,8 @@ Form ──POST──▶ /api/lead ──▶ D1 "leads" table      (always, firs
 ## 1. Account and domain
 
 1. Create a Cloudflare account at dash.cloudflare.com.
-2. **dosdeltas.com**: Domain Registration → Register Domains → buy it there (at-cost, DNS is set up automatically).
-3. **dosdeltas.com.ar** (optional, later): register at NIC Argentina (non-resident route on Trámites a Distancia), then in Cloudflare *Add a domain* and set the two Cloudflare nameservers at NIC. Add a Redirect Rule: all requests → `https://dosdeltas.com${path}` (301, preserve query string).
+2. **dos-deltas.com** (you already own it): Cloudflare → **Add a domain** → `dos-deltas.com` → Free plan. Cloudflare shows two nameservers; set them at the registrar where you bought the domain (replace the existing ones). Activation takes minutes to a few hours. If the domain has email (MX records), check Cloudflare imported them before switching. Alternatively, transfer the registration itself to Cloudflare later (Domain Registration → Transfer), which is at-cost.
+3. **dos-deltas.com.ar** (optional, later): register at NIC Argentina (non-resident route on Trámites a Distancia), then in Cloudflare *Add a domain* and set the two Cloudflare nameservers at NIC. Add a Redirect Rule: all requests → `https://dos-deltas.com${path}` (301, preserve query string).
 
 ## 2. Database (D1)
 
@@ -33,7 +33,7 @@ Form ──POST──▶ /api/lead ──▶ D1 "leads" table      (always, firs
 
 ## 5. Captcha (Turnstile)
 
-Turnstile → **Add widget** → name `dosdeltas-form`, hostnames `dosdeltas.com` (add `<project>.pages.dev` too), mode **Managed** → copy the **site key** and **secret key**.
+Turnstile → **Add widget** → name `dosdeltas-form`, hostnames `dos-deltas.com` (add `<project>.pages.dev` too), mode **Managed** → copy the **site key** and **secret key**.
 
 ## 6. Pages project
 
@@ -45,7 +45,7 @@ Turnstile → **Add widget** → name `dosdeltas-form`, hostnames `dosdeltas.com
 | Name | Type | Value |
 | --- | --- | --- |
 | `NODE_VERSION` | Text | `22` |
-| `SITE_URL` | Text | `https://dosdeltas.com` |
+| `SITE_URL` | Text | `https://dos-deltas.com` |
 | `PUBLIC_WHATSAPP_NUMBER` | Text | `85246632432` |
 | `PUBLIC_BOOKING_URL` | Text | `https://calendar.app.google/4CbamWThfxTjwfrn7` |
 | `PUBLIC_TURNSTILE_SITE_KEY` | Text | site key from step 5 |
@@ -60,13 +60,13 @@ Turnstile → **Add widget** → name `dosdeltas-form`, hostnames `dosdeltas.com
 
 5. **Settings → Bindings**: add **D1 database** → variable name `DB` → `dosdeltas-leads`. Add **R2 bucket** → variable name `FILES` → `dosdeltas-leads` (if you did step 3).
 6. **Deployments → Retry deployment** (variables and bindings only apply to new deployments).
-7. **Custom domains** → add `dosdeltas.com` and `www.dosdeltas.com`.
+7. **Custom domains** → add `dos-deltas.com` and `www.dos-deltas.com`.
 
 ## 7. Test
 
 1. Open the site on your phone, submit the form with a PDF attached.
 2. You should get a Telegram message within seconds, plus the PDF.
-3. Download all leads: `https://dosdeltas.com/api/leads.csv` (any username, password = `ADMIN_PASSWORD`). Opens in Excel or Google Sheets.
+3. Download all leads: `https://dos-deltas.com/api/leads.csv` (any username, password = `ADMIN_PASSWORD`). Opens in Excel or Google Sheets.
 4. Delete the test row: D1 → Console → `DELETE FROM leads WHERE empresa = 'Test SRL';`
 
 ## Day to day
@@ -76,7 +76,7 @@ Turnstile → **Add widget** → name `dosdeltas-form`, hostnames `dosdeltas.com
   ```sql
   SELECT rubro, lead_score, COUNT(*) FROM leads GROUP BY rubro, lead_score ORDER BY rubro;
   ```
-- **Attachments:** `https://dosdeltas.com/api/files/<key>` (key is in the `files` column), same password.
+- **Attachments:** `https://dos-deltas.com/api/files/<key>` (key is in the `files` column), same password.
 - **Optional n8n** for a Google Sheet or the auto-reply email: create a Webhook node (JSON body), set `FORWARD_URL` to its URL and `FORWARD_SECRET` to a random string, and check the `X-DD-Secret` header in n8n.
 
 ## Safeguards built in

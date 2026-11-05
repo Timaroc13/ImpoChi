@@ -42,7 +42,7 @@ h1{position:absolute;left:80px;top:208px;width:780px;font-family:'Source Serif 4
 .foot b{font-family:'IBM Plex Mono';font-weight:500;color:#1f5560}
 .blk{position:absolute;right:0;bottom:0;width:180px;height:200px;background:#a9743a}.blk2{position:absolute;right:180px;bottom:200px;width:120px;height:200px;background:#1f5560}</style></head>
 <body><div class="top">${MARK(44)}Dos Deltas</div><p class="eb">${eyebrow}</p><h1>${title}</h1><div class="eq"></div>
-<p class="foot">Del lado del comprador · <b>dosdeltas.com</b></p><div class="blk"></div><div class="blk2"></div></body></html>`;
+<p class="foot">Del lado del comprador · <b>dos-deltas.com</b></p><div class="blk"></div><div class="blk2"></div></body></html>`;
 
 const browser = await chromium.launch();
 const page = await browser.newPage({ viewport: { width: 1200, height: 630 } });
@@ -82,7 +82,7 @@ ${rows.map((r) => `<tr class="${r[7]}"><td><b>${r[0]}</b>${r[7] ? '<br><span cla
 <div class="eq"></div>
 <div class="grid"><div><h2>Recomendación: Fábrica B</h2><ul><li>Cumple la especificación completa y entrega kit de repuestos de desgaste incluido.</li><li>Acepta 20 % contra aprobación de prueba en fábrica (FAT) y 80 % contra documentos de embarque.</li><li>Plazo 10 días más largo que A; precio 8 % menor.</li></ul></div>
 <div><h2>Observaciones</h2><ul><li>Fábrica C: la auditoría encontró que terceriza el tablero eléctrico; no verificable antes del embarque.</li><li>Fábrica A: PLC solo en inglés y chino; cotiza la traducción aparte.</li><li>Nombres y contactos se comparten al avanzar con la ejecución, bajo acuerdo de no elusión.</li></ul></div></div>
-<div class="ft"><span>Dos Deltas · Octavio Martínez — ITBA · London Business School</span><span>Sin comisiones de fábrica · dosdeltas.com</span></div>
+<div class="ft"><span>Dos Deltas · Octavio Martínez — ITBA · London Business School</span><span>Sin comisiones de fábrica · dos-deltas.com</span></div>
 </body></html>`;
 await page.setContent(pdfHtml, { waitUntil: 'networkidle' });
 await page.evaluate(() => document.fonts.ready);
