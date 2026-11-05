@@ -4,12 +4,12 @@ import { fmtUSD } from '../lib/format.js';
 interface Props { compact?: boolean }
 const { compact = false } = Astro.props;
 ---
-<section class="section bg-paper-raised border-y border-line" aria-labelledby="fees-title">
+<section class="section bg-paper-raised border-y border-line" aria-labelledby="fees-title" id="servicios">
   <div class="wrap grid gap-10 md:grid-cols-[1fr_1.3fr]">
     <div>
       <p class="eyebrow">Honorarios</p>
-      <h2 id="fees-title" class="mt-2 text-h1-m md:text-h1">Cómo cobro</h2>
-      <p class="mt-4 text-ink-muted">Todo por escrito antes de empezar. Trabajo para vos, no para las fábricas.</p>
+      <h2 id="fees-title" class="mt-2 text-h1-m md:text-h1">Servicios</h2>
+      <p class="mt-4 text-ink-muted">Trabajo para vos desde China.</p>
     </div>
     <div>
       <table class="w-full border-collapse text-left">
@@ -33,8 +33,7 @@ const { compact = false } = Astro.props;
         <ul class="mt-6 space-y-2 text-ink">
           <li>La búsqueda cubre {TERMS.quotesMin} a {TERMS.quotesMax} cotizaciones comparadas. Si hacés el pedido conmigo dentro de los {TERMS.creditDays} días, se descuenta del honorario de ejecución.</li>
           <li>La ejecución se paga mitad con la orden de compra y mitad cuando aprueba la inspección.</li>
-          <li>No cobro comisiones a las fábricas.</li>
-          <li>Vos le pagás directo a la fábrica. Nunca recibo el dinero de tu mercadería.</li>
+          <li>Trabajo con el comprador, no con la fábrica, y sin comisiones.</li>
         </ul>
       )}
     </div>

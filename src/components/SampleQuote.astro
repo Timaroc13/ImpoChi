@@ -2,9 +2,9 @@
 // Anonymised sample quote comparison. Illustrative numbers, labelled as such.
 import { fmtUSD, fmtNum } from '../lib/format.js';
 const rows = [
-  { f: 'Fábrica A', place: 'Dongguan', fob: 18400, landed: 24840, lead: 35, moq: '1 equipo', inspect: 'Aprobado', rec: false },
-  { f: 'Fábrica B', place: 'Foshan', fob: 16900, landed: 22980, lead: 45, moq: '1 equipo', inspect: 'Aprobado', rec: true },
-  { f: 'Fábrica C', place: 'Guangzhou', fob: 15200, landed: 20670, lead: 50, moq: '2 equipos', inspect: 'Observado', rec: false },
+  { f: 'Fábrica A', fob: 18400, landed: 24840, lead: 35, moq: '1 equipo', inspect: 'Aprobado', rec: false },
+  { f: 'Fábrica B', fob: 16900, landed: 22980, lead: 45, moq: '1 equipo', inspect: 'Aprobado', rec: true },
+  { f: 'Fábrica C', fob: 15200, landed: 20670, lead: 50, moq: '2 equipos', inspect: 'Observado', rec: false },
 ];
 ---
 <figure class="overflow-x-auto">
@@ -13,7 +13,7 @@ const rows = [
     <thead>
       <tr class="border-b border-ink">
         <th scope="col" class="eyebrow px-4 py-2">Fábrica</th>
-        <th scope="col" class="eyebrow px-4 py-2 text-right">FOB Shenzhen</th>
+        <th scope="col" class="eyebrow px-4 py-2 text-right">FOB</th>
         <th scope="col" class="eyebrow px-4 py-2 text-right">Puesto en AR (est.)</th>
         <th scope="col" class="eyebrow px-4 py-2 text-right">Plazo</th>
         <th scope="col" class="eyebrow px-4 py-2">Mínimo</th>
@@ -23,7 +23,7 @@ const rows = [
     <tbody>
       {rows.map((r) => (
         <tr class:list={['border-b border-line', r.rec && 'bg-river-soft']}>
-          <th scope="row" class="px-4 py-4 font-semibold">{r.f}<br /><span class="text-small font-normal text-ink-muted">{r.place}{r.rec && ' · recomendada'}</span></th>
+          <th scope="row" class="px-4 py-4 font-semibold">{r.f}{r.rec && <><br /><span class="text-small font-normal text-ink-muted">recomendada</span></>}</th>
           <td class="fig px-4 py-4 text-right">{fmtUSD(r.fob)}</td>
           <td class="fig px-4 py-4 text-right">{fmtUSD(r.landed)}</td>
           <td class="fig px-4 py-4 text-right">{fmtNum(r.lead)} días</td>

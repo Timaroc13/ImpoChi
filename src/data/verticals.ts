@@ -86,7 +86,7 @@ export const VERTICALS: Vertical[] = [
       },
       {
         q: '¿Visitás la fábrica?',
-        a: 'En maquinaria, sí, cuando el pedido lo justifica: estoy a una hora de Shenzhen y Dongguan y a dos de Foshan. Si no, hago una videollamada en planta con la máquina funcionando.',
+        a: 'En maquinaria, sí, cuando el pedido lo justifica: estoy en el sur de China, cerca de las fábricas. Si no, hago una videollamada en planta con la máquina funcionando.',
       },
       {
         q: '¿Hay prueba de la máquina antes del embarque?',
@@ -161,14 +161,14 @@ export const VERTICALS: Vertical[] = [
     slug: 'mobiliario',
     rubro: 'mobiliario',
     label: 'Mobiliario comercial',
-    title: 'Mobiliario comercial de Foshan para tu proyecto | Dos Deltas',
+    title: 'Mobiliario comercial de China para tu proyecto | Dos Deltas',
     description:
-      'Muebles y equipamiento para hoteles, gastronomía, retail y oficinas, cotizados en fábricas verificadas de Foshan, con costo puesto en Argentina. Sin comisiones.',
-    h1: 'Mobiliario y equipamiento comercial de Foshan, para tu hotel, local u oficina.',
-    sub: 'Cotizo tu proyecto completo con fábricas de Shunde y Lecong, a dos horas de mi base, y controlo terminaciones antes del embarque.',
+      'Muebles y equipamiento para hoteles, gastronomía, retail y oficinas, cotizados en fábricas verificadas del sur de China, con costo puesto en Argentina. Sin comisiones.',
+    h1: 'Mobiliario y equipamiento comercial de China, para tu hotel, local u oficina.',
+    sub: 'Cotizo tu proyecto completo con fábricas especializadas y controlo terminaciones antes del embarque.',
     searchFee: 300,
     intro:
-      'Foshan concentra la mayor oferta de muebles del mundo. Comparo 2 a 4 fábricas sobre tu listado de ítems, verifico materiales y terminaciones en persona, y te muestro el costo estimado puesto en obra.',
+      'El sur de China concentra la mayor oferta de muebles del mundo. Comparo 2 a 4 fábricas sobre tu listado de ítems, verifico materiales y terminaciones en persona, y te muestro el costo estimado puesto en obra.',
     examples: [
       { name: 'Sillas y mesas para gastronomía', specs: ['Estructura metálica o madera', 'Tapas HPL o madera maciza', 'Uso comercial intensivo'] },
       { name: 'Mobiliario para habitaciones de hotel', specs: ['Paquete completo por habitación', 'Cabeceros, placares, escritorios', 'Terminaciones a muestra'] },
@@ -200,7 +200,7 @@ export const VERTICALS: Vertical[] = [
       },
       {
         q: '¿Puedo combinar varias fábricas en un envío?',
-        a: 'Sí. Coordino que las fábricas entreguen en un depósito de consolidación en Foshan o Shenzhen, y tu forwarder lo embarca en un solo contenedor.',
+        a: 'Sí. Coordino que las fábricas entreguen en un depósito de consolidación, y tu forwarder lo embarca en un solo contenedor.',
       },
       {
         q: '¿Cuánto tarda un proyecto completo?',
@@ -210,7 +210,7 @@ export const VERTICALS: Vertical[] = [
     waText: 'Hola Octa, quiero cotizar mobiliario para un proyecto: ',
     specPlaceholder: 'Ej.: 40 sillas y 12 mesas para restaurante, estructura metálica negra, tapas de madera maciza 70 × 70 cm.',
     keywords: ['muebles de China para hoteles', 'mobiliario comercial China'],
-    serviceName: 'Búsqueda y compra de mobiliario comercial en Foshan',
+    serviceName: 'Búsqueda y compra de mobiliario comercial en China',
   },
 ];
 

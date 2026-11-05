@@ -21,11 +21,11 @@ const FONTS = 'https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@500&f
 const MARK = (s) => `<svg viewBox="0 0 36 44" width="${(s * 36) / 44}" height="${s}"><polygon points="0,20 24,20 12,0" fill="#1f5560"/><polygon points="12,24 36,24 24,44" fill="#a9743a"/></svg>`;
 
 const OG = [
-  ['home', 'Sourcing en el sur de China', 'Comprá directo a fábricas, con alguien de confianza del otro lado.'],
+  ['home', 'Sourcing en el sur de China', 'Comprá directo a fábricas en China, a través de alguien de confianza.'],
   ['maquinaria', 'Maquinaria y equipos', 'Especificaciones que sirvan en Argentina: 220/380 V, 50 Hz, repuestos.'],
   ['packaging', 'Envases y packaging', 'Packaging personalizado, comparado y controlado antes del saldo.'],
-  ['mobiliario', 'Mobiliario comercial', 'Fábricas de Foshan para tu hotel, local u oficina.'],
-  ['como-trabajamos', 'Cómo trabajo', 'Del lado del comprador, por escrito. Sin comisiones de fábrica.'],
+  ['mobiliario', 'Mobiliario comercial', 'Fábricas del sur de China para tu hotel, local u oficina.'],
+  ['como-trabajamos', 'Cómo trabajo', 'Trabajo con el comprador, no con la fábrica, y sin comisiones.'],
   ['sobre-mi', 'Sobre mí', 'Soy Octa, argentino, vivo en Hong Kong.'],
   ['cotizacion', 'Pedí tu cotización', '2 a 4 cotizaciones comparables, con costo puesto en Argentina.'],
   ['preguntas-frecuentes', 'Preguntas frecuentes', 'Honorarios, pagos y BCRA, inspección, pedido mínimo.'],
@@ -55,9 +55,9 @@ for (const [file, eyebrow, title] of OG) {
 
 // Sample anonymised quote comparison (illustrative numbers, labelled as such)
 const rows = [
-  ['Fábrica A', 'Dongguan · 2009 · 120 empleados', 'USD 18.400', 'USD 24.840', '35 días', '1 equipo', 'Aprobado', ''],
-  ['Fábrica B', 'Foshan · 2012 · 85 empleados', 'USD 16.900', 'USD 22.980', '45 días', '1 equipo', 'Aprobado', 'rec'],
-  ['Fábrica C', 'Guangzhou · 2017 · 40 empleados', 'USD 15.200', 'USD 20.670', '50 días', '2 equipos', 'Observado', ''],
+  ['Fábrica A', '2009 · 120 empleados', 'USD 18.400', 'USD 24.840', '35 días', '1 equipo', 'Aprobado', ''],
+  ['Fábrica B', '2012 · 85 empleados', 'USD 16.900', 'USD 22.980', '45 días', '1 equipo', 'Aprobado', 'rec'],
+  ['Fábrica C', '2017 · 40 empleados', 'USD 15.200', 'USD 20.670', '50 días', '2 equipos', 'Observado', ''],
 ];
 const pdfHtml = `<!doctype html><html lang="es-AR"><head><meta charset="utf-8"><link rel="stylesheet" href="${FONTS}">
 <style>@page{size:A4 landscape;margin:16mm}*{box-sizing:border-box}body{font-family:'IBM Plex Sans';color:#13262b;background:#f5f2ec;font-size:12px;line-height:18px;margin:0}
@@ -73,9 +73,9 @@ tbody tr{border-bottom:1px solid #d6cfc2}.n{font-family:'IBM Plex Mono';font-wei
 .ft{position:fixed;bottom:0;left:0;right:0;font-size:10px;color:#56656b;display:flex;justify-content:space-between}</style></head><body>
 <div class="hd"><div class="brand">${MARK(26)}Dos Deltas</div><span class="tag">Ejemplo ilustrativo · datos ficticios</span></div>
 <h1>Comparación de cotizaciones: llenadora de líquidos, 6 picos</h1>
-<p class="muted">Especificación común: 6 picos, 1.500 botellas/h (1 l), acero inoxidable 304, 380 V trifásica, 50 Hz, PLC con pantalla en español. Precios FOB Shenzhen.</p>
+<p class="muted">Especificación común: 6 picos, 1.500 botellas/h (1 l), acero inoxidable 304, 380 V trifásica, 50 Hz, PLC con pantalla en español. Precios FOB.</p>
 <div class="eq"></div>
-<table><thead><tr><th>Fábrica</th><th>Perfil</th><th style="text-align:right">FOB Shenzhen</th><th style="text-align:right">Puesto en AR (est.)</th><th style="text-align:right">Plazo</th><th>Mínimo</th><th>Auditoría</th></tr></thead><tbody>
+<table><thead><tr><th>Fábrica</th><th>Perfil</th><th style="text-align:right">FOB</th><th style="text-align:right">Puesto en AR (est.)</th><th style="text-align:right">Plazo</th><th>Mínimo</th><th>Auditoría</th></tr></thead><tbody>
 ${rows.map((r) => `<tr class="${r[7]}"><td><b>${r[0]}</b>${r[7] ? '<br><span class="muted">recomendada</span>' : ''}</td><td class="muted">${r[1]}</td><td class="n">${r[2]}</td><td class="n">${r[3]}</td><td class="n">${r[4]}</td><td>${r[5]}</td><td><span class="chip ${r[6] === 'Aprobado' ? 'ok' : 'obs'}">${r[6]}</span></td></tr>`).join('')}
 </tbody></table>
 <p class="muted" style="margin-top:6px">Costo puesto en Argentina estimado a 1,35 × FOB, después de recuperar créditos fiscales (derecho 14 %, tasa de estadística, despachante y flete local). En la aduana se desembolsa cerca de 2 × FOB.</p>

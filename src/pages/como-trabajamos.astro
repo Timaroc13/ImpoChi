@@ -2,7 +2,6 @@
 import Base from '../layouts/Base.astro';
 import HowItWorks from '../components/HowItWorks.astro';
 import Fees from '../components/Fees.astro';
-import MoneyFlow from '../components/MoneyFlow.astro';
 import SampleQuote from '../components/SampleQuote.astro';
 import FinalCta from '../components/FinalCta.astro';
 import { TERMS } from '../config';
@@ -19,8 +18,8 @@ import { orgSchema } from '../lib/schema';
   <section class="pt-10 md:pt-20">
     <div class="wrap">
       <p class="eyebrow">Cómo trabajo</p>
-      <h1 class="mt-4 max-w-[22ch] text-display-m md:text-display">Del lado del comprador, por escrito.</h1>
-      <p class="mt-6 max-w-[60ch] text-[18px] leading-[28px]">Trabajo para vos, no para las fábricas. Te digo antes de empezar cuánto cobro, qué hago y qué no hago.</p>
+      <h1 class="mt-4 max-w-[22ch] text-display-m md:text-display">Del lado del comprador.</h1>
+      <p class="mt-6 max-w-[60ch] text-[18px] leading-[28px]">Trabajo con el comprador, no con la fábrica, y sin comisiones. Antes de empezar te digo cuánto cobro y qué incluye cada etapa.</p>
     </div>
     <hr class="equator mt-10 md:mt-20" />
   </section>
@@ -28,11 +27,11 @@ import { orgSchema } from '../lib/schema';
   <HowItWorks title="El proceso, paso a paso" />
 
   <section class="section" aria-labelledby="money-title">
-    <div class="wrap grid gap-10 md:grid-cols-2">
+    <div class="wrap">
       <div class="prose-dd">
         <p class="eyebrow">Pagos</p>
-        <h2 id="money-title" class="!mt-2 text-h1-m md:text-h1">Vos le pagás directo a la fábrica</h2>
-        <p>Nunca recibo el dinero de tu mercadería. La transferencia va de tu banco a la cuenta corporativa de la fábrica, que verifico contra su licencia comercial antes de que pagues.</p>
+        <h2 id="money-title" class="!mt-2 text-h1-m md:text-h1">Pagos y anticipos</h2>
+        <p>Antes de cada pago verifico que la cuenta bancaria de la fábrica coincida con su licencia comercial.</p>
         <p>Las fábricas chinas suelen pedir 30 % de anticipo. El BCRA permite pagar importaciones al contado con documentos de embarque, pero todavía restringe los pagos antes del embarque (salvo hasta 30 % FOB en bienes de capital). Negocio condiciones que tu banco pueda cursar:</p>
         <ul>
           <li>Pago contra documentos de embarque, con una seña chica pagada con fondos propios en el exterior si la tenés.</li>
@@ -41,7 +40,6 @@ import { orgSchema } from '../lib/schema';
         </ul>
         <p class="text-small text-ink-muted">Confirmá siempre con tu banco cómo cursa el pago según tu posición arancelaria.</p>
       </div>
-      <MoneyFlow />
     </div>
   </section>
 
@@ -98,24 +96,6 @@ import { orgSchema } from '../lib/schema';
 
   <Fees />
 
-  <section class="section" aria-labelledby="scope-title">
-    <div class="wrap grid gap-10 md:grid-cols-2">
-      <div>
-        <h2 id="scope-title" class="text-h1-m md:text-h1">Lo que no hago</h2>
-        <ul class="mt-6 space-y-2 border-t border-line pt-4">
-          <li>Despacho de aduana: lo hace tu despachante.</li>
-          <li>Flete internacional: lo contratás con tu forwarder.</li>
-          <li>Pedidos de menos de <span class="fig">{fmtUSD(TERMS.minOrder)}</span>.</li>
-          <li>Garantías sobre el producto: controlo antes de que pagues el saldo, pero la fábrica es responsable de su mercadería.</li>
-          <li>Comisiones de fábricas: no las cobro, por escrito.</li>
-        </ul>
-      </div>
-      <div>
-        <h2 class="text-h1-m md:text-h1">Confidencialidad</h2>
-        <p class="mt-6 border-t border-line pt-4">Firmamos un acuerdo de confidencialidad antes de que me mandes planos o artes. Las cotizaciones llegan con el perfil, la auditoría y las fotos de cada fábrica; el nombre y el contacto se comparten cuando avanzamos con la ejecución, bajo un acuerdo de no elusión de 24 meses.</p>
-      </div>
-    </div>
-  </section>
 
   <FinalCta />
 </Base>

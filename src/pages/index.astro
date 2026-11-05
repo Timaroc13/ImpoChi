@@ -9,7 +9,6 @@ import FaqList from '../components/FaqList.astro';
 import FinalCta from '../components/FinalCta.astro';
 import WaLink from '../components/WaLink.astro';
 import SampleQuote from '../components/SampleQuote.astro';
-import MoneyFlow from '../components/MoneyFlow.astro';
 import { VERTICALS } from '../data/verticals';
 import { FAQ_GENERAL } from '../data/faq';
 import { orgSchema, personSchema, serviceSchema, faqSchema } from '../lib/schema';
@@ -26,13 +25,13 @@ const homeFaq = FAQ_GENERAL.filter((f) => ['¿Cuánto cobrás?', '¿Hay pedido m
   <section class="pt-10 md:pt-20">
     <div class="wrap">
       <p class="eyebrow">Del lado del comprador · Sur de China</p>
-      <h1 class="mt-4 max-w-[20ch] text-display-m md:text-display">Comprá directo a fábricas del sur de China, con alguien de confianza del otro lado.</h1>
-      <p class="mt-6 max-w-[58ch] text-[18px] leading-[28px] text-ink">Te consigo 2 a 4 cotizaciones comparables de fábricas verificadas, con el costo puesto en Argentina. Vos le pagás directo a la fábrica; yo no toco tu plata.</p>
+      <h1 class="mt-4 max-w-[20ch] text-display-m md:text-display">Comprá directo a fábricas en China, a través de alguien de confianza.</h1>
+      <p class="mt-6 max-w-[58ch] text-[18px] leading-[28px] text-ink">Cotizaciones en China con costo logístico completo para Argentina.</p>
       <div class="mt-6 flex flex-wrap gap-4">
         <a href="/cotizacion" class="btn-primary" data-cta="hero-home">Pedí tu cotización</a>
         <WaLink location="hero-home" />
       </div>
-      <p class="mt-6 text-small text-ink-muted">Base en Hong Kong · A 1 hora de Shenzhen · Sin comisiones de fábricas</p>
+      <p class="mt-6 text-small text-ink-muted">Base en Hong Kong · Sin comisiones de fábricas</p>
     </div>
     <hr class="equator mt-10 md:mt-20" />
   </section>
@@ -62,15 +61,7 @@ const homeFaq = FAQ_GENERAL.filter((f) => ['¿Cuánto cobrás?', '¿Hay pedido m
       <h2 id="compare-title" class="mt-2 max-w-[28ch] text-h1-m md:text-h1">Elegí fábrica con datos: mismas especificaciones, costo puesto en Argentina.</h2>
       <p class="mt-4 max-w-[64ch] text-ink-muted">El FOB más barato no siempre es la compra más barata. Cada cotización llega con plazo, mínimo, resultado de la auditoría y el costo estimado puesto en tu depósito.</p>
       <div class="mt-10"><SampleQuote /></div>
-      <hr class="equator my-10" />
-      <div class="grid gap-10 md:grid-cols-2">
-        <div>
-          <h3 class="text-h2">Recomendación por escrito</h3>
-          <p class="mt-2 text-ink">Te digo qué fábrica elegiría yo y por qué, con los riesgos de cada una. La decisión es tuya.</p>
-          <p class="mt-4"><a href="/recursos/costo-importar-china-argentina">Cómo calculo el costo puesto en Argentina</a></p>
-        </div>
-        <MoneyFlow />
-      </div>
+      <p class="mt-6"><a href="/recursos/costo-importar-china-argentina">Cómo calculo el costo puesto en Argentina</a></p>
     </div>
   </section>
 
