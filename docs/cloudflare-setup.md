@@ -37,7 +37,7 @@ Turnstile → **Add widget** → name `dosdeltas-form`, hostnames `dos-deltas.co
 
 ## 6. Pages project
 
-1. Workers & Pages → **Create** → Pages → **Connect to Git** → GitHub → `timaroc13/ImpoChi`.
+1. Workers & Pages → **Create application** → click the small **"Continue to Pages"** link under the box (the default "Continue with GitHub" creates a Worker, which is not what this project uses) → **Import an existing Git repository** → GitHub → `timaroc13/ImpoChi`.
 2. Production branch: `claude/new-session-5m55g2` (or `main` once you merge it).
 3. Framework preset: **Astro**. Build command `npm run build`. Output directory `dist`.
 4. **Settings → Variables and Secrets** (Production). `PUBLIC_*` values are read at build time, the rest by the function:
@@ -78,6 +78,11 @@ Turnstile → **Add widget** → name `dosdeltas-form`, hostnames `dos-deltas.co
   ```
 - **Attachments:** `https://dos-deltas.com/api/files/<key>` (key is in the `files` column), same password.
 - **Optional n8n** for a Google Sheet or the auto-reply email: create a Webhook node (JSON body), set `FORWARD_URL` to its URL and `FORWARD_SECRET` to a random string, and check the `X-DD-Secret` header in n8n.
+
+## Notes from the first setup
+
+- Uploading the site with `wrangler pages deploy` does not work from a Claude cloud session where the Cloudflare token is a network secret: the asset upload uses its own short-lived token, which the proxy overwrites. Git-connected builds avoid this; every push to the production branch deploys.
+- Everything else (D1, Turnstile, Pages variables, bindings, domains, triggering a build) works through the Cloudflare API from the session.
 
 ## Safeguards built in
 
