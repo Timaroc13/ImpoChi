@@ -1,0 +1,16 @@
+# Local development only: copy to wrangler.toml, then
+#   npx wrangler d1 migrations apply DB --local && npm run build && npx wrangler pages dev
+# Do NOT commit a wrangler.toml: production bindings are set in the Cloudflare dashboard (docs/cloudflare-setup.md).
+name = "dosdeltas"
+pages_build_output_dir = "./dist"
+compatibility_date = "2025-09-01"
+[[d1_databases]]
+binding = "DB"
+database_name = "dosdeltas-leads"
+database_id = "00000000-0000-0000-0000-000000000000"
+migrations_dir = "migrations"
+[[r2_buckets]]
+binding = "FILES"
+bucket_name = "dosdeltas-leads"
+[vars]
+ADMIN_PASSWORD = "test-pass"

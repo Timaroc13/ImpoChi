@@ -30,7 +30,10 @@ export const SITE = {
     address: clean(env.PUBLIC_HK_ADDRESS),
   },
   hours: 'Respondo de lunes a viernes, 9 a 19 h (Argentina).',
-  formEndpoint: clean(env.PUBLIC_FORM_ENDPOINT),
+  // Where the form posts. Default: the Cloudflare Pages Function at /api/lead (functions/api/lead.ts).
+  formEndpoint: clean(env.PUBLIC_FORM_ENDPOINT) || '/api/lead',
+  // Cloudflare Turnstile site key (public). Empty = no captcha widget.
+  turnstileSiteKey: clean(env.PUBLIC_TURNSTILE_SITE_KEY),
   analytics: {
     ga4: clean(env.PUBLIC_GA4_ID),
     gads: clean(env.PUBLIC_GADS_ID),

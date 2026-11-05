@@ -164,6 +164,10 @@ const req = '<span class="text-ink-muted font-normal"> (obligatorio)</span>';
           <span>Acepto la <a href="/privacidad" target="_blank">Política de Privacidad</a> y que me contacten por WhatsApp y email sobre mi consulta.<Fragment set:html={req} /></span>
         </label>
 
+        {SITE.turnstileSiteKey && !SITE.preview && (
+          <div class="cf-turnstile" data-sitekey={SITE.turnstileSiteKey} data-language="es" data-appearance="interaction-only" data-theme="light"></div>
+        )}
+
         <input type="hidden" name="utm_source" />
         <input type="hidden" name="utm_medium" />
         <input type="hidden" name="utm_campaign" />
@@ -188,6 +192,8 @@ const req = '<span class="text-ink-muted font-normal"> (obligatorio)</span>';
     </form>
   </div>
 </section>
+
+{SITE.turnstileSiteKey && !SITE.preview && <script is:inline src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>}
 
 <script>
   import { isValidCuit, normalizePhone, isValidEmail, leadScore, thankYouPath } from '../lib/lead.js';
@@ -345,7 +351,10 @@ const req = '<span class="text-ink-muted font-normal"> (obligatorio)</span>';
           else throw new Error('no endpoint');
         } else {
           const res = await fetch(endpoint, { method: 'POST', body: data, headers: { Accept: 'application/json' } });
-          if (!res.ok) throw new Error(`HTTP ${res.status}`);
+          if (!res.ok) {
+            (window as any).turnstile?.reset?.();
+            throw new Error(`HTTP ${res.status}`);
+          }
         }
       } catch (err) {
         console.error(err);

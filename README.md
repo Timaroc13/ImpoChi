@@ -30,13 +30,18 @@ npm run offline        # offline/dos-deltas-sitio.zip: preview copy that opens b
 
 Commercial terms (fees, minimums, SLAs) live in one place: `TERMS` in `src/config.ts`.
 
-## Lead form → CRM
+## Lead form → Cloudflare
 
-Two-step native form (`src/components/QuoteForm.astro`) rather than a Tally embed: same fields/validation as §10.5, stays on-brand, no third-party JS. It POSTs `multipart/form-data` to `PUBLIC_FORM_ENDPOINT` (n8n Webhook node, "Binary data" on for attachments; Formspree also works).
+The two-step form (`src/components/QuoteForm.astro`) posts to `/api/lead`, a Cloudflare Pages Function (`functions/api/lead.ts`):
 
-Fields sent: `rubro, producto, especificaciones, archivos[], cantidad, precio_objetivo, valor_pedido, plazo, experiencia, nombre, empresa, ri, cuit (digits), cargo, whatsapp (E.164), email, provincia, consentimiento, utm_source/medium/campaign/term/content, gclid, landing_page, page, lead_score (A/B/C), enviado (ISO time)`.
+1. origin check, honeypot, Turnstile, rate limit (5 per IP per 10 min);
+2. server-side validation and lead score (A/B/C) — the browser's values are not trusted;
+3. insert into D1 (`migrations/0001_leads.sql`), attachments into R2;
+4. Telegram alert with the attachments; optional JSON forward to n8n (`FORWARD_URL`).
 
-UTMs/gclid are first-touch, kept 90 days in localStorage. Suggested n8n flow: Webhook → Google Sheets append → Telegram message (`lead_score`, `rubro`, `valor_pedido`, `empresa`, WhatsApp link). If the endpoint is missing or fails, the form keeps the data and shows a WhatsApp/email fallback.
+`/api/leads.csv` exports every lead and `/api/files/<key>` serves attachments, both behind HTTP Basic auth (`ADMIN_PASSWORD`). Setup steps: **[docs/cloudflare-setup.md](docs/cloudflare-setup.md)**.
+
+Local test of the function: `cp wrangler.example.toml wrangler.toml && npx wrangler d1 migrations apply DB --local && npm run build && npx wrangler pages dev`.
 
 ## Analytics
 
@@ -44,12 +49,12 @@ Consent Mode v2, default denied; GA4, Google Ads tag and Clarity load only after
 
 ## Deploy (Cloudflare Pages)
 
-Build `npm run build`, output `dist`, set env vars in the Pages project. `public/_headers` and `public/_redirects` are picked up automatically. `.com.ar` → `.com`: add the `.com.ar` zone to Cloudflare and a Redirect Rule (301, preserve path and query) to `https://dosdeltas.com`.
+Follow [docs/cloudflare-setup.md](docs/cloudflare-setup.md). `public/_headers` and `public/_redirects` are picked up automatically.
 
 ## Before launch — needs you
 
 - [ ] **Logo SVGs**: the design-system blobs couldn't be downloaded from this session, so `public/brand/*.svg` and `Mark.astro` are rebuilt from the spec (two triangles, lower offset right). Swap in the exported files from the Logos group.
-- [ ] Env values (WhatsApp +852 and the Google Calendar booking link are set in `.env.example`; brief prefers a +54 number),  LinkedIn, founder photo + 60–90 s video, form endpoint, GA4/Ads/Clarity IDs. WhatsApp UI, video, photo and HK entity block stay hidden until set; the photo falls back to an "OM" block.
+- [ ] Env values (WhatsApp +852 and the Google Calendar booking link are set in `.env.example`; brief prefers a +54 number),  LinkedIn, founder photo + 60–90 s video, Turnstile keys, Telegram bot, GA4/Ads/Clarity IDs. WhatsApp UI, video, photo and HK entity block stay hidden until set; the photo falls back to an "OM" block.
 - [ ] HK company name/CR number/address once incorporated (never shown as a placeholder).
 - [ ] Inspection-report sample PDF (brief §10.6) — not built; needs a real redacted report. The quote-comparison PDF is generated and labelled "Ejemplo ilustrativo · datos ficticios".
 - [ ] Legal review of `/privacidad` and `/terminos` (data-controller identity, AAIP registration question, governing law, search-fee refund clause I added).
