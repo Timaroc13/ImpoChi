@@ -19,7 +19,11 @@ export const SITE = {
   },
   email: clean(env.PUBLIC_CONTACT_EMAIL) || 'hola@dosdeltas.com',
   whatsapp: clean(env.PUBLIC_WHATSAPP_NUMBER).replace(/\D/g, ''),
-  calLink: clean(env.PUBLIC_CAL_LINK),
+  // Booking page. A cal.com URL is embedded inline on /gracias; any other URL (Google Calendar
+  // appointment page, Calendly…) is shown as a button.
+  booking: clean(env.PUBLIC_BOOKING_URL),
+  // Preview builds (shared review links): the form does not send data.
+  preview: clean(env.PUBLIC_PREVIEW) === '1',
   hk: {
     company: clean(env.PUBLIC_HK_COMPANY_NAME),
     number: clean(env.PUBLIC_HK_COMPANY_NUMBER),
@@ -49,5 +53,10 @@ export const TERMS = {
   turnaroundDays: 10,
   replyHours: 24,
 } as const;
+
+export const calSlug = (() => {
+  const m = SITE.booking.match(/^https?:\/\/(?:app\.)?cal\.com\/(.+?)\/?$/);
+  return m ? m[1] : '';
+})();
 
 export const hasWhatsApp = SITE.whatsapp.length >= 8;

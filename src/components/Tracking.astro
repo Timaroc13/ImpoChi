@@ -23,6 +23,7 @@
     if (!el) return;
     if (el.dataset.wa) track('whatsapp_click', { location: el.dataset.wa });
     if (el.dataset.cta) track('cta_click', { cta_id: el.dataset.cta });
+    if (el.dataset.booking !== undefined) track('book_call_click');
     if (el.dataset.sample) track('sample_download', { file: el.dataset.sample });
   });
 

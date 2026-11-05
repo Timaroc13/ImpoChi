@@ -22,7 +22,7 @@ npm run og             # regenerate public/og/*.png and the sample PDF (uses Pla
 | `/como-trabajamos` | Process, payments/BCRA, deliverables, sample comparison + PDF, fees, scope |
 | `/sobre-mi` | Founder; photo/video/LinkedIn come from env |
 | `/cotizacion` | Form only. Accepts `?rubro=maquinaria|packaging|mobiliario|otro` |
-| `/gracias`, `/gracias-chico` | Post-submit (noindex). `< USD 10k` routes to `/gracias-chico` |
+| `/gracias`, `/gracias-chico` | Post-submit (noindex). `< USD 10k` routes to `/gracias-chico`. Booking: cal.com URLs embed inline, other URLs (Google Calendar) show a button tracked as `book_call_click` |
 | `/preguntas-frecuentes` | All FAQs, FAQPage schema |
 | `/recursos/costo-importar-china-argentina` | SEO pillar: worked landed-cost example + calculator |
 | `/privacidad`, `/terminos` | Ley 25.326 notice; terms summary |
@@ -48,7 +48,7 @@ Build `npm run build`, output `dist`, set env vars in the Pages project. `public
 ## Before launch — needs you
 
 - [ ] **Logo SVGs**: the design-system blobs couldn't be downloaded from this session, so `public/brand/*.svg` and `Mark.astro` are rebuilt from the spec (two triangles, lower offset right). Swap in the exported files from the Logos group.
-- [ ] Env values: WhatsApp (+54) number, Cal.com link, LinkedIn, founder photo + 60–90 s video, form endpoint, GA4/Ads/Clarity IDs. WhatsApp UI, video, photo and HK entity block stay hidden until set; the photo falls back to an "OM" block.
+- [ ] Env values (WhatsApp +852 and the Google Calendar booking link are set in `.env.example`; brief prefers a +54 number),  LinkedIn, founder photo + 60–90 s video, form endpoint, GA4/Ads/Clarity IDs. WhatsApp UI, video, photo and HK entity block stay hidden until set; the photo falls back to an "OM" block.
 - [ ] HK company name/CR number/address once incorporated (never shown as a placeholder).
 - [ ] Inspection-report sample PDF (brief §10.6) — not built; needs a real redacted report. The quote-comparison PDF is generated and labelled "Ejemplo ilustrativo · datos ficticios".
 - [ ] Legal review of `/privacidad` and `/terminos` (data-controller identity, AAIP registration question, governing law, search-fee refund clause I added).

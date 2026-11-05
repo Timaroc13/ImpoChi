@@ -28,12 +28,14 @@ const req = '<span class="text-ink-muted font-normal"> (obligatorio)</span>';
 <section id={id} class="section scroll-mt-4" aria-labelledby={`${id}-title`}>
   <div class="wrap max-w-[760px]">
     <h2 id={`${id}-title`} class="text-h1-m md:text-h1">{heading}</h2>
+    {SITE.preview && <p class="mt-4 rounded-sm bg-river-soft p-4 text-small text-ink">Vista previa: este formulario no envía datos. Al terminar te lleva a la página de confirmación.</p>}
     <p class="mt-2 text-ink-muted">Dos pasos, unos 5 minutos. Te respondo en 24 h hábiles, hora de Buenos Aires.</p>
 
     <form
       class="card mt-6 md:p-10"
       data-quote-form
       data-endpoint={SITE.formEndpoint}
+      data-preview={SITE.preview ? '1' : undefined}
       novalidate
       enctype="multipart/form-data"
     >
@@ -336,7 +338,9 @@ const req = '<span class="text-ink-muted font-normal"> (obligatorio)</span>';
       if (fileInput && !fileInput.files?.length) data.delete('archivos');
 
       try {
-        if (!endpoint) {
+        if (form.dataset.preview) {
+          console.info('[quote-form] preview build, not sent:', Object.fromEntries(data));
+        } else if (!endpoint) {
           if (import.meta.env.DEV) console.warn('[quote-form] PUBLIC_FORM_ENDPOINT is not set; payload:', Object.fromEntries(data));
           else throw new Error('no endpoint');
         } else {
@@ -361,7 +365,9 @@ const req = '<span class="text-ink-muted font-normal"> (obligatorio)</span>';
         }));
       } catch {}
       // let analytics beacons flush
-      setTimeout(() => location.assign(thankYouPath(valor)), 300);
+      // Preview builds are hosted as plain .html files, so link to the file.
+      const dest = thankYouPath(valor);
+      setTimeout(() => location.assign(form.dataset.preview ? dest.slice(1) + '.html' : dest), 300);
     });
   });
 </script>

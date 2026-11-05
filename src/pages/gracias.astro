@@ -1,6 +1,6 @@
 ---
 import Base from '../layouts/Base.astro';
-import { SITE, hasWhatsApp, TERMS } from '../config';
+import { SITE, hasWhatsApp, TERMS, calSlug } from '../config';
 import { waLink } from '../lib/lead.js';
 const defaultWa = hasWhatsApp ? waLink(SITE.whatsapp, 'Hola Octa, acabo de mandar una consulta.') : '';
 ---
@@ -16,8 +16,13 @@ const defaultWa = hasWhatsApp ? waLink(SITE.whatsapp, 'Hola Octa, acabo de manda
       </div>
       <hr class="equator my-10" />
       <h2 class="text-h2">Reservá la llamada</h2>
-      {SITE.calLink ? (
-        <div id="cal-inline" class="mt-6 min-h-[560px] w-full border border-line bg-paper-raised" data-cal-link={SITE.calLink}></div>
+      {calSlug ? (
+        <div id="cal-inline" class="mt-6 min-h-[560px] w-full border border-line bg-paper-raised" data-cal-link={calSlug}></div>
+      ) : SITE.booking ? (
+        <div class="mt-4">
+          <p class="text-ink">Videollamada de 20 minutos, entre 9 y 19 h de Argentina. Elegí el horario que te quede cómodo.</p>
+          <a href={SITE.booking} class="btn-primary mt-4" target="_blank" rel="noopener" data-booking>Elegí un horario</a>
+        </div>
       ) : (
         <p class="mt-4 text-ink-muted">Te escribo para coordinar un horario entre 9 y 19 h de Argentina.</p>
       )}
