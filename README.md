@@ -11,6 +11,7 @@ npm run dev            # http://localhost:4321
 npm test               # lead-scoring, CUIT, phone, landed-cost unit tests
 npm run build          # → dist/
 npm run og             # regenerate public/og/*.png and the sample PDF (uses Playwright)
+npm run offline        # offline/dos-deltas-sitio.zip: preview copy that opens by double-click (form sends nothing)
 ```
 
 ## Pages

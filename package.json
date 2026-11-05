@@ -8,7 +8,8 @@
     "build": "astro build",
     "preview": "astro preview",
     "og": "node scripts/og-images.mjs",
-    "test": "node --test tests/*.test.mjs"
+    "test": "node --test tests/*.test.mjs",
+    "offline": "PUBLIC_PREVIEW=1 astro build --outDir offline/dos-deltas-sitio && node scripts/offline-copy.mjs offline/dos-deltas-sitio && cd offline && zip -qr dos-deltas-sitio.zip dos-deltas-sitio"
   },
   "dependencies": {
     "@astrojs/sitemap": "3.7.4",
