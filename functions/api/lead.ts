@@ -2,6 +2,7 @@
 // 1) origin + honeypot + Turnstile + rate limit  2) validate  3) save to D1 (+ files to R2)
 // 4) Telegram alert with attachments  5) optional forward to n8n.
 import { isValidCuit, normalizePhone, isValidEmail, leadScore, ORDER_VALUES, TIMELINES } from '../../src/lib/lead.js';
+import { sendTelegram } from '../_lib/telegram';
 import { type Ctx, type Env, json, sha256, newId, escapeHtml } from '../_lib/util';
 
 const MAX_BYTES = 10 * 1024 * 1024;
@@ -10,7 +11,7 @@ const RUBROS = ['maquinaria', 'packaging', 'mobiliario', 'otro'];
 const RATE_LIMIT = { max: 5, minutes: 10 };
 
 const TEXT_FIELDS = {
-  rubro: 20, producto: 200, especificaciones: 3000, cantidad: 100, precio_objetivo: 100, valor_pedido: 20, plazo: 20,
+  rubro: 20, producto: 2000, especificaciones: 3000, cantidad: 100, precio_objetivo: 100, valor_pedido: 20, plazo: 20,
   experiencia: 20, nombre: 120, empresa: 120, ri: 10, cuit: 20, cargo: 60, whatsapp: 30, email: 160, provincia: 60,
   consentimiento: 5, utm_source: 200, utm_medium: 200, utm_campaign: 200, utm_term: 200, utm_content: 200, gclid: 300,
   landing_page: 300, page: 300,
@@ -55,20 +56,20 @@ export const onRequestPost = async ({ request, env, waitUntil }: Ctx) => {
     v[k] = String(form.get(k) ?? '').trim().slice(0, max);
   }
 
-  // Validate (mirrors the client; never trust the browser).
+  // Validate (mirrors the short form; never trust the browser). Required: rubro, producto,
+  // valor_pedido, nombre, empresa, whatsapp, consentimiento. Everything else is optional.
   const errors: string[] = [];
   if (!RUBROS.includes(v.rubro)) errors.push('rubro');
   if (v.producto.length < 10) errors.push('producto');
-  if (!v.cantidad) errors.push('cantidad');
   if (!ORDER_VALUES.some((o) => o.value === v.valor_pedido)) errors.push('valor_pedido');
-  if (!TIMELINES.some((o) => o.value === v.plazo)) errors.push('plazo');
-  if (v.nombre.length < 3) errors.push('nombre');
+  if (v.plazo && !TIMELINES.some((o) => o.value === v.plazo)) errors.push('plazo');
+  if (v.nombre.length < 2) errors.push('nombre');
   if (v.empresa.length < 2) errors.push('empresa');
-  if (!['si', 'no', 'nose'].includes(v.ri)) errors.push('ri');
+  if (v.ri && !['si', 'no', 'nose'].includes(v.ri)) errors.push('ri');
   if (v.cuit && !isValidCuit(v.cuit)) errors.push('cuit');
   const phone = normalizePhone(v.whatsapp);
   if (!phone.ok) errors.push('whatsapp');
-  if (!isValidEmail(v.email)) errors.push('email');
+  if (v.email && !isValidEmail(v.email)) errors.push('email');
   if (v.consentimiento !== 'si') errors.push('consentimiento');
 
   const files = form.getAll('archivos').filter((f): f is File => typeof f !== 'string' && f.size > 0);
@@ -79,7 +80,7 @@ export const onRequestPost = async ({ request, env, waitUntil }: Ctx) => {
 
   v.whatsapp = phone.e164;
   v.cuit = v.cuit.replace(/\D/g, '');
-  const score = leadScore({ ri: v.ri, orderValue: v.valor_pedido, timeline: v.plazo });
+  const score = leadScore({ orderValue: v.valor_pedido });
   const id = newId();
   const createdAt = new Date().toISOString();
 
@@ -129,36 +130,32 @@ export const onRequest = () => json({ ok: false, error: 'method_not_allowed' }, 
 const LABEL = (list: { value: string; label: string }[], val: string) => list.find((o) => o.value === val)?.label ?? val;
 
 async function notifyTelegram(env: Env, r: Record<string, any>, files: { name: string; type: string; data: ArrayBuffer }[], origin: string) {
-  if (!env.TELEGRAM_BOT_TOKEN || !env.TELEGRAM_CHAT_ID) return;
-  const api = `https://api.telegram.org/bot${env.TELEGRAM_BOT_TOKEN}`;
+  if (!env.TELEGRAM_BOT_TOKEN || !env.TELEGRAM_CHAT_ID) {
+    console.warn('telegram: TELEGRAM_BOT_TOKEN or TELEGRAM_CHAT_ID not set');
+    return;
+  }
   const e = (s: string) => escapeHtml(String(s ?? ''));
   const wa = r.whatsapp.replace(/\D/g, '');
   const lines = [
-    `<b>${r.lead_score === 'A' ? '🟢' : r.lead_score === 'B' ? '🟡' : '⚪️'} Lead ${e(r.lead_score)} · ${e(r.rubro)}</b>`,
-    `<b>${e(r.empresa)}</b> — ${e(r.nombre)}${r.cargo ? ` (${e(r.cargo)})` : ''}`,
-    `RI/sociedad: ${e(r.ri)}${r.cuit ? ` · CUIT ${e(r.cuit)}` : ''}${r.provincia ? ` · ${e(r.provincia)}` : ''}`,
+    `<b>${r.lead_score === 'A' ? '🟢' : r.lead_score === 'B' ? '🟡' : '⚪️'} Lead ${e(r.lead_score)} · ${e(r.rubro)} · ${e(LABEL(ORDER_VALUES, r.valor_pedido))}</b>`,
+    `<b>${e(r.empresa)}</b> — ${e(r.nombre)}`,
     '',
-    `<b>Producto:</b> ${e(r.producto)}`,
-    `<b>Cantidad:</b> ${e(r.cantidad)}${r.precio_objetivo ? ` · objetivo ${e(r.precio_objetivo)}` : ''}`,
-    `<b>Valor:</b> ${e(LABEL(ORDER_VALUES, r.valor_pedido))} · <b>Plazo:</b> ${e(LABEL(TIMELINES, r.plazo))}`,
-    r.experiencia ? `Experiencia China: ${e(r.experiencia)}` : '',
-    r.especificaciones ? `\n<i>${e(r.especificaciones.slice(0, 800))}</i>` : '',
+    e(r.producto.slice(0, 1500)),
     '',
     `WhatsApp: https://wa.me/${wa}`,
-    `Email: ${e(r.email)}`,
+    r.email ? `Email: ${e(r.email)}` : null,
     `Origen: ${e([r.utm_source, r.utm_medium, r.utm_campaign, r.utm_term].filter(Boolean).join(' / ') || 'directo')} · ${e(r.landing_page || r.page)}`,
-    `Archivos: ${files.length} · ID ${e(r.id)} · ${origin}/api/leads.csv`,
-  ].filter((l) => l !== '');
-  await fetch(`${api}/sendMessage`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ chat_id: env.TELEGRAM_CHAT_ID, text: lines.join('\n'), parse_mode: 'HTML', disable_web_page_preview: true }),
-  });
+    files.length ? `Archivos: ${files.length}` : null,
+    `${origin}/api/leads.csv`,
+  ].filter((l) => l !== null);
+  const res = await sendTelegram(env, 'sendMessage', JSON.stringify({ chat_id: env.TELEGRAM_CHAT_ID, text: lines.join('\n'), parse_mode: 'HTML', disable_web_page_preview: true }));
+  if (!res.ok) console.error('telegram sendMessage failed:', res.status, res.description);
   for (const f of files) {
     const body = new FormData();
     body.append('chat_id', env.TELEGRAM_CHAT_ID);
     body.append('caption', `${r.empresa} · ${f.name}`.slice(0, 1000));
     body.append('document', new Blob([f.data], { type: f.type }), f.name);
-    await fetch(`${api}/sendDocument`, { method: 'POST', body });
+    const rf = await sendTelegram(env, 'sendDocument', body);
+    if (!rf.ok) console.error('telegram sendDocument failed:', rf.status, rf.description);
   }
 }

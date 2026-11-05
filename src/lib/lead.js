@@ -65,14 +65,12 @@ export const TIMELINES = [
 ];
 
 /**
- * Lead score per brief §10.5:
- * A = RI/sociedad "si" + value >= USD 10k + timeline <= 6 months; B = two of three; C = rest.
+ * Lead score from the order value (the short form asks nothing else that qualifies):
+ * A = USD 10k or more, B = "No sé todavía", C = below the minimum.
  */
-export function leadScore({ ri, orderValue, timeline }) {
+export function leadScore({ orderValue }) {
   const v = ORDER_VALUES.find((o) => o.value === orderValue);
-  const t = TIMELINES.find((o) => o.value === timeline);
-  const hits = [ri === 'si', v?.qualifies === true, t?.within6m === true].filter(Boolean).length;
-  return hits === 3 ? 'A' : hits === 2 ? 'B' : 'C';
+  return v?.qualifies === true ? 'A' : v?.qualifies === null ? 'B' : 'C';
 }
 
 /** Route after submit: below the minimum goes to the polite page. */

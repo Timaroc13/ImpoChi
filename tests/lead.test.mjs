@@ -30,10 +30,11 @@ test('email', () => {
 });
 
 test('lead score A/B/C', () => {
-  assert.equal(leadScore({ ri: 'si', orderValue: '25-50k', timeline: 'lt3m' }), 'A');
-  assert.equal(leadScore({ ri: 'si', orderValue: '25-50k', timeline: 'exploring' }), 'B');
-  assert.equal(leadScore({ ri: 'no', orderValue: 'unknown', timeline: '3-6m' }), 'C');
-  assert.equal(leadScore({ ri: 'nose', orderValue: 'lt10k', timeline: 'gt6m' }), 'C');
+  assert.equal(leadScore({ orderValue: '25-50k' }), 'A');
+  assert.equal(leadScore({ orderValue: 'gt150k' }), 'A');
+  assert.equal(leadScore({ orderValue: 'unknown' }), 'B');
+  assert.equal(leadScore({ orderValue: 'lt10k' }), 'C');
+  assert.equal(leadScore({ orderValue: 'bogus' }), 'C');
 });
 
 test('routing below minimum', () => {
