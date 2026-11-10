@@ -6,6 +6,7 @@ const cfg = {
   ga4: SITE.analytics.ga4,
   gads: SITE.analytics.gads,
   gadsLeadLabel: SITE.analytics.gadsLeadLabel,
+  gadsWhatsappLabel: SITE.analytics.gadsWhatsappLabel,
   clarity: SITE.analytics.clarity,
 };
 ---
@@ -54,6 +55,9 @@ const cfg = {
     gtag('event', name, params);
     if (name === 'generate_lead' && cfg.gads && cfg.gadsLeadLabel) {
       gtag('event', 'conversion', { send_to: cfg.gads + '/' + cfg.gadsLeadLabel });
+    }
+    if (name === 'whatsapp_click' && cfg.gads && cfg.gadsWhatsappLabel) {
+      gtag('event', 'conversion', { send_to: cfg.gads + '/' + cfg.gadsWhatsappLabel });
     }
     if (window.clarity) { try { window.clarity('event', name); } catch (e) {} }
   };

@@ -38,6 +38,7 @@ export const SITE = {
     ga4: clean(env.PUBLIC_GA4_ID),
     gads: clean(env.PUBLIC_GADS_ID),
     gadsLeadLabel: clean(env.PUBLIC_GADS_LEAD_LABEL),
+    gadsWhatsappLabel: clean(env.PUBLIC_GADS_WHATSAPP_LABEL),
     clarity: clean(env.PUBLIC_CLARITY_ID),
   },
 } as const;
