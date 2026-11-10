@@ -45,7 +45,7 @@ Local test of the function: `cp wrangler.example.toml wrangler.toml && npx wrang
 
 ## Analytics
 
-Consent Mode v2, default denied; GA4, Google Ads tag and Clarity load only after "Aceptar". Events (`window.ddTrack`): `form_start`, `form_step1_complete`, `generate_lead` (+ Ads conversion if `PUBLIC_GADS_LEAD_LABEL`), `qualified_lead` (score A, GA4 only; import to Ads as offline conversion via gclid from the Sheet), `whatsapp_click {location}`, `book_call` (Cal.com), `sample_download`, `cta_click {cta_id}`, `scroll_75`, `faq_open {question}`. Mark `generate_lead` and `qualified_lead` as key events in GA4.
+Consent Mode v2, default denied; GA4, Google Ads tag and Clarity load only after "Aceptar". Events (`window.ddTrack`): `form_start`, `form_step1_complete`, `generate_lead` (+ Ads conversion if `PUBLIC_GADS_LEAD_LABEL`), `whatsapp_click` (+ Ads conversion if `PUBLIC_GADS_WHATSAPP_LABEL`), `qualified_lead` (score A, GA4 only; import to Ads as offline conversion via gclid from the Sheet), `whatsapp_click {location}`, `book_call` (Cal.com), `sample_download`, `cta_click {cta_id}`, `scroll_75`, `faq_open {question}`. Mark `generate_lead` and `qualified_lead` as key events in GA4.
 
 ## Deploy (Cloudflare Pages)
 
