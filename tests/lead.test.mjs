@@ -59,3 +59,34 @@ test('landed cost matches the brief worked example', () => {
   assert.equal(Math.round(r.trueCost), 26925);
   assert.equal(r.costMultiple.toFixed(2), '1.35');
 });
+
+import { contactCheck } from '../src/lib/lead.js';
+test('contact rule: WhatsApp only', () => {
+  const c = contactCheck({ whatsapp: '+54 9 11 2345 6789', email: '' });
+  assert.equal(c.ok, true);
+  assert.equal(c.whatsapp, '+5491123456789');
+  assert.equal(c.email, '');
+});
+test('contact rule: email only (WhatsApp left at the "+54 9 " prefill)', () => {
+  const c = contactCheck({ whatsapp: '+54 9 ', email: ' compras@empresa.com.ar ' });
+  assert.equal(c.ok, true);
+  assert.equal(c.whatsapp, '');
+  assert.equal(c.email, 'compras@empresa.com.ar');
+});
+test('contact rule: both', () => {
+  const c = contactCheck({ whatsapp: '+54 9 351 412 3456', email: 'a@b.com' });
+  assert.equal(c.ok, true);
+  assert.equal(c.whatsapp, '+5493514123456');
+  assert.equal(c.email, 'a@b.com');
+});
+test('contact rule: neither → contact error only', () => {
+  for (const input of [{ whatsapp: '', email: '' }, { whatsapp: '+54 9 ', email: '  ' }, {}]) {
+    const c = contactCheck(input);
+    assert.equal(c.ok, false);
+    assert.deepEqual(c.errors, { contact: 'missing' });
+  }
+});
+test('contact rule: a filled but invalid field blocks, even if the other is valid', () => {
+  assert.deepEqual(contactCheck({ whatsapp: '+54 9 11 2345', email: 'a@b.com' }).errors, { whatsapp: 'invalid' });
+  assert.deepEqual(contactCheck({ whatsapp: '+54 9 11 2345 6789', email: 'a@b' }).errors, { email: 'invalid' });
+});

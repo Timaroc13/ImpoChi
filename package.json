@@ -8,8 +8,10 @@
     "build": "astro build",
     "preview": "astro preview",
     "og": "node scripts/og-images.mjs",
-    "test": "node --test tests/*.test.mjs",
-    "offline": "PUBLIC_PREVIEW=1 astro build --outDir offline/dos-deltas-sitio && node scripts/offline-copy.mjs offline/dos-deltas-sitio && cd offline && zip -qr dos-deltas-sitio.zip dos-deltas-sitio"
+    "test": "node --test tests/lead.test.mjs tests/funnel.test.mjs",
+    "offline": "PUBLIC_PREVIEW=1 astro build --outDir offline/dos-deltas-sitio && node scripts/offline-copy.mjs offline/dos-deltas-sitio && cd offline && zip -qr dos-deltas-sitio.zip dos-deltas-sitio",
+    "test:build": "astro build && node --test tests/build.test.mjs",
+    "test:e2e": "node tests/e2e/form-funnel.e2e.cjs"
   },
   "dependencies": {
     "@astrojs/sitemap": "3.7.4",
