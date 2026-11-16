@@ -83,3 +83,24 @@ export function waLink(number, text) {
   const n = digits(number);
   return `https://wa.me/${n}${text ? `?text=${encodeURIComponent(text)}` : ''}`;
 }
+
+/**
+ * Contact rule: WhatsApp OR email (at least one), each valid if filled.
+ * The WhatsApp field is prefilled with "+54 9 ", so up to 3 digits counts as empty.
+ * Returns { ok, whatsapp (E.164 or ''), email (trimmed or ''), errors: { whatsapp?, email?, contact? } }.
+ */
+export function contactCheck({ whatsapp = '', email = '' } = {}) {
+  const errors = {};
+  const waDigits = digits(whatsapp);
+  const waFilled = waDigits.length > 3;
+  const em = String(email ?? '').trim();
+  let wa = '';
+  if (waFilled) {
+    const p = normalizePhone(whatsapp);
+    if (p.ok) wa = p.e164;
+    else errors.whatsapp = 'invalid';
+  }
+  if (em && !isValidEmail(em)) errors.email = 'invalid';
+  if (!waFilled && !em) errors.contact = 'missing';
+  return { ok: Object.keys(errors).length === 0, whatsapp: wa, email: errors.email ? '' : em, errors };
+}

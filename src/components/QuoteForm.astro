@@ -1,5 +1,7 @@
 ---
-// Short RFQ form: one step, 7 fields. Posts multipart/form-data to /api/lead (functions/api/lead.ts).
+// Short RFQ form. Posts multipart/form-data to /api/lead (functions/api/lead.ts).
+// Required: rubro, valor_pedido, producto, nombre, consentimiento, and WhatsApp OR email.
+// Sends cookieless funnel events to /api/funnel (src/lib/funnel.js).
 import { RUBROS } from '../data/verticals';
 import { ORDER_VALUES } from '../lib/lead.js';
 import { SITE, hasWhatsApp } from '../config';
@@ -58,22 +60,26 @@ const opt = '<span class="text-ink-muted font-normal"> (opcional)</span>';
           <input id={`${id}-nombre`} name="nombre" type="text" required autocomplete="name" maxlength="120" class={field} />
         </div>
         <div>
-          <label class={labelCls} for={`${id}-empresa`}>Empresa</label>
-          <input id={`${id}-empresa`} name="empresa" type="text" required autocomplete="organization" maxlength="120" class={field} />
+          <label class={labelCls} for={`${id}-empresa`}>Empresa<Fragment set:html={opt} /></label>
+          <input id={`${id}-empresa`} name="empresa" type="text" autocomplete="organization" maxlength="120" class={field} />
         </div>
       </div>
 
-      <div class="grid gap-6 md:grid-cols-2">
-        <div>
-          <label class={labelCls} for={`${id}-wa`}>WhatsApp</label>
-          <input id={`${id}-wa`} name="whatsapp" type="tel" required autocomplete="tel" inputmode="tel" maxlength="24" class={field} value="+54 9 " data-phone />
-          <p class="mt-1 text-small text-ink-muted">Con código de área, sin 0 ni 15.</p>
+      <fieldset data-contact>
+        <legend class="font-semibold">¿Cómo te contacto?</legend>
+        <p class="mt-1 text-small text-ink-muted" id={`${id}-contact-hint`}>WhatsApp o email: con uno alcanza.</p>
+        <div class="mt-2 grid gap-6 md:grid-cols-2">
+          <div>
+            <label class={labelCls} for={`${id}-wa`}>WhatsApp</label>
+            <input id={`${id}-wa`} name="whatsapp" type="tel" autocomplete="tel" inputmode="tel" maxlength="24" class={field} value="+54 9 " data-phone aria-describedby={`${id}-contact-hint`} />
+            <p class="mt-1 text-small text-ink-muted">Con código de área, sin 0 ni 15.</p>
+          </div>
+          <div>
+            <label class={labelCls} for={`${id}-email`}>Email</label>
+            <input id={`${id}-email`} name="email" type="email" autocomplete="email" maxlength="160" class={field} aria-describedby={`${id}-contact-hint`} />
+          </div>
         </div>
-        <div>
-          <label class={labelCls} for={`${id}-email`}>Email<Fragment set:html={opt} /></label>
-          <input id={`${id}-email`} name="email" type="email" autocomplete="email" maxlength="160" class={field} />
-        </div>
-      </div>
+      </fieldset>
 
       <label class="flex items-start gap-2 text-small">
         <input type="checkbox" name="consentimiento" value="si" required class="mt-1 accent-river" />
@@ -81,7 +87,7 @@ const opt = '<span class="text-ink-muted font-normal"> (opcional)</span>';
       </label>
 
       {SITE.turnstileSiteKey && !SITE.preview && (
-        <div class="cf-turnstile" data-sitekey={SITE.turnstileSiteKey} data-language="es" data-appearance="interaction-only" data-theme="light"></div>
+        <div class="cf-turnstile" data-sitekey={SITE.turnstileSiteKey} data-language="es" data-appearance="interaction-only" data-theme="light" data-error-callback="ddTurnstileError" data-timeout-callback="ddTurnstileTimeout"></div>
       )}
 
       <input type="hidden" name="utm_source" />
@@ -92,6 +98,7 @@ const opt = '<span class="text-ink-muted font-normal"> (opcional)</span>';
       <input type="hidden" name="gclid" />
       <input type="hidden" name="landing_page" />
       <input type="hidden" name="page" />
+      <input type="hidden" name="pv" />
 
       <button type="submit" class="btn-primary w-full sm:w-auto" data-submit>Enviar consulta</button>
 
@@ -106,18 +113,56 @@ const opt = '<span class="text-ink-muted font-normal"> (opcional)</span>';
 {SITE.turnstileSiteKey && !SITE.preview && <script is:inline src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>}
 
 <script>
-  import { normalizePhone, isValidEmail, leadScore, thankYouPath } from '../lib/lead.js';
+  import { contactCheck, leadScore, thankYouPath } from '../lib/lead.js';
+  import { newPageloadId } from '../lib/funnel.js';
 
   const track = (n: string, p: Record<string, unknown> = {}) => (window as any).ddTrack?.(n, p);
+  const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
+  // Attribution: URL first, then first-touch values kept by Tracking.astro.
+  const attribution = () => {
+    let attr: Record<string, string> = {};
+    try { attr = JSON.parse(localStorage.getItem('dd_attr') || '{}'); } catch {}
+    const q = new URLSearchParams(location.search);
+    const get = (k: string) => q.get(k) || attr[k] || '';
+    return { get, landing: attr.landing_page || location.pathname };
+  };
 
   document.querySelectorAll<HTMLFormElement>('form[data-quote-form]').forEach((form) => {
     const errorBox = form.querySelector<HTMLDivElement>('[data-error]')!;
     const fallback = form.querySelector<HTMLTemplateElement>('template[data-fallback]')!;
     const rubroSel = form.querySelector<HTMLSelectElement>('[data-rubro-select]')!;
     const specs = form.querySelector<HTMLTextAreaElement>('[data-specs]')!;
+    const contactBox = form.querySelector<HTMLFieldSetElement>('[data-contact]')!;
     const el = (name: string) => form.elements.namedItem(name) as HTMLInputElement | null;
+    const preview = !!form.dataset.preview;
 
-    // Pre-fill rubro from ?rubro= (ads can point straight to /cotizacion?rubro=packaging)
+    // ---- Cookieless funnel counters (one random id per page load; nothing stored in the browser) ----
+    const pv = newPageloadId();
+    el('pv')!.value = pv;
+    const sent = new Set<string>();
+    const funnel = (event: string, detail = '') => {
+      const key = `${event}:${detail}`;
+      if (preview || sent.has(key)) return;
+      sent.add(key);
+      const { get } = attribution();
+      const body = JSON.stringify({ event, detail, pv, path: location.pathname, utm_campaign: get('utm_campaign'), utm_term: get('utm_term') });
+      try {
+        if (!navigator.sendBeacon?.('/api/funnel', new Blob([body], { type: 'text/plain' }))) {
+          fetch('/api/funnel', { method: 'POST', body, keepalive: true }).catch(() => {});
+        }
+      } catch {}
+    };
+    (window as any).ddTurnstileError = () => funnel('turnstile_fail', 'widget');
+    (window as any).ddTurnstileTimeout = () => funnel('turnstile_fail', 'timeout');
+    if ('IntersectionObserver' in window) {
+      const io = new IntersectionObserver((entries) => {
+        if (entries.some((e) => e.isIntersecting)) { funnel('form_view'); io.disconnect(); }
+      }, { threshold: 0.25 });
+      io.observe(form);
+    }
+
+    // Pre-fill rubro from ?rubro= (explicit links only; sector pages preselect it server-side).
     const qp = new URLSearchParams(location.search).get('rubro');
     if (qp && [...rubroSel.options].some((o) => o.value === qp)) rubroSel.value = qp;
     const syncPlaceholder = () => {
@@ -128,90 +173,122 @@ const opt = '<span class="text-ink-muted font-normal"> (opcional)</span>';
     rubroSel.addEventListener('change', syncPlaceholder);
 
     let started = false;
-    form.addEventListener('focusin', () => {
-      if (started) return;
+    form.addEventListener('focusin', (e) => {
+      if (started || !(e.target as HTMLElement).matches('input:not([type=hidden]),select,textarea')) return;
       started = true;
+      funnel('form_start');
       track('form_start', { rubro: rubroSel.value || 'none' });
     });
 
-    const setError = (input: HTMLElement | null, msg: string | null) => {
+    const errorTarget = (input: HTMLElement) =>
+      input === contactBox ? contactBox : (input as HTMLInputElement).type === 'checkbox' ? input.closest('label')! : input;
+    const setError = (input: HTMLElement | null, msg: string | null, key?: string) => {
       if (!input) return;
-      const name = (input as HTMLInputElement).name;
+      const name = key || (input as HTMLInputElement).name;
       const errId = `${form.id || 'f'}-${name}-err`;
       form.querySelector(`#${CSS.escape(errId)}`)?.remove();
       if (msg) {
         input.setAttribute('aria-invalid', 'true');
-        input.setAttribute('aria-describedby', errId);
+        input.setAttribute('aria-errormessage', errId);
         const p = document.createElement('p');
         p.id = errId;
         p.className = 'mt-1 text-small text-signal';
         p.textContent = msg;
-        (input.type === 'checkbox' ? input.closest('label')! : input).insertAdjacentElement('afterend', p);
+        errorTarget(input).insertAdjacentElement('afterend', p);
       } else {
         input.removeAttribute('aria-invalid');
-        input.removeAttribute('aria-describedby');
+        input.removeAttribute('aria-errormessage');
       }
     };
 
-    const validators: Record<string, (i: HTMLInputElement) => string | null> = {
+    const fieldValidators: Record<string, (i: HTMLInputElement) => string | null> = {
       rubro: (i) => (i.value ? null : 'Elegí un rubro.'),
       valor_pedido: (i) => (i.value ? null : 'Elegí un rango; "No sé todavía" también sirve.'),
       producto: (i) => (i.value.trim().length >= 10 ? null : 'Contame un poco más: producto y cantidad.'),
       nombre: (i) => (i.value.trim().length >= 2 ? null : 'Completá tu nombre.'),
-      empresa: (i) => (i.value.trim().length >= 2 ? null : 'Completá el nombre de tu empresa.'),
-      whatsapp: (i) => (normalizePhone(i.value).ok ? null : 'Revisá el número: +54 9, código de área y número.'),
-      email: (i) => (!i.value.trim() || isValidEmail(i.value) ? null : 'Revisá el email, o dejalo vacío.'),
       consentimiento: (i) => (i.checked ? null : 'Necesito tu consentimiento para responderte.'),
     };
-
-    const validate = () => {
-      let firstBad: HTMLElement | null = null;
-      for (const name of Object.keys(validators)) {
-        const input = el(name)!;
-        const msg = validators[name](input);
-        setError(input, msg);
-        if (msg && !firstBad) firstBad = input;
-      }
-      firstBad?.focus();
-      return !firstBad;
+    const MSG = {
+      whatsapp: 'Revisá el número: +54 9, código de área y número. O dejalo vacío y usá el email.',
+      email: 'Revisá el email, o dejalo vacío y usá WhatsApp.',
+      contact: 'Dejanos tu WhatsApp o tu email para poder responderte.',
+    };
+    const checkContact = () => {
+      const c = contactCheck({ whatsapp: el('whatsapp')!.value, email: el('email')!.value });
+      setError(el('whatsapp'), c.errors.whatsapp ? MSG.whatsapp : null);
+      setError(el('email'), c.errors.email ? MSG.email : null);
+      setError(contactBox, c.errors.contact ? MSG.contact : null, 'contact');
+      return c;
     };
 
-    // Clear an error as soon as the field is fixed: while typing (input), not on blur, so the
-    // layout never shifts at the moment the visitor clicks the next field.
+    // Returns the first failing field name, or null when the form is valid.
+    const validate = (): string | null => {
+      let first: string | null = null;
+      let firstEl: HTMLElement | null = null;
+      for (const name of ['rubro', 'valor_pedido', 'producto', 'nombre']) {
+        const input = el(name)!;
+        const msg = fieldValidators[name](input);
+        setError(input, msg);
+        if (msg && !first) { first = name; firstEl = input; }
+      }
+      const c = checkContact();
+      const contactFail = c.errors.whatsapp ? 'whatsapp' : c.errors.email ? 'email' : c.errors.contact ? 'contact' : null;
+      if (contactFail && !first) { first = contactFail; firstEl = contactFail === 'contact' ? el('whatsapp') : el(contactFail); }
+      const consent = el('consentimiento')!;
+      const cmsg = fieldValidators.consentimiento(consent);
+      setError(consent, cmsg);
+      if (cmsg && !first) { first = 'consentimiento'; firstEl = consent; }
+      firstEl?.focus();
+      return first;
+    };
+
+    // Clear errors as soon as they're fixed: while typing, not on blur, so the layout never shifts under a click.
     const recheck = (e: Event) => {
       const t = e.target as HTMLInputElement;
-      if (t.name in validators && t.getAttribute('aria-invalid') && !validators[t.name](t)) setError(t, null);
+      if (t.name === 'whatsapp' || t.name === 'email') {
+        if (form.querySelector('[data-contact] [aria-invalid], [data-contact][aria-invalid]')) checkContact();
+      } else if (t.name in fieldValidators && t.getAttribute('aria-invalid') && !fieldValidators[t.name](t)) setError(t, null);
     };
     form.addEventListener('input', recheck);
     form.addEventListener('change', recheck);
 
+    // Turnstile runs in the background; give it a few seconds if the visitor submits very fast.
+    const waitForTurnstile = async () => {
+      if (!form.querySelector('.cf-turnstile')) return true;
+      for (let i = 0; i < 16; i++) {
+        if (el('cf-turnstile-response')?.value) return true;
+        await sleep(500);
+      }
+      return false;
+    };
+
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
+      funnel('submit_pressed');
       errorBox.classList.add('hidden');
-      if (!validate()) return;
+      const blocked = validate();
+      if (blocked) { funnel('submit_blocked', blocked); return; }
       if ((el('empresa_web')?.value ?? '') !== '') return; // bot
 
-      let attr: Record<string, string> = {};
-      try { attr = JSON.parse(localStorage.getItem('dd_attr') || '{}'); } catch {}
-      const q = new URLSearchParams(location.search);
-      ['utm_source', 'utm_medium', 'utm_campaign', 'utm_term', 'utm_content', 'gclid'].forEach((k) => {
-        el(k)!.value = q.get(k) || attr[k] || '';
-      });
-      el('landing_page')!.value = attr.landing_page || location.pathname;
+      const { get, landing } = attribution();
+      ['utm_source', 'utm_medium', 'utm_campaign', 'utm_term', 'utm_content', 'gclid'].forEach((k) => { el(k)!.value = get(k); });
+      el('landing_page')!.value = landing;
       el('page')!.value = location.pathname;
       const valor = el('valor_pedido')!.value;
       const score = leadScore({ orderValue: valor });
-      const phone = el('whatsapp')!;
-      phone.value = normalizePhone(phone.value).e164;
+      const c = contactCheck({ whatsapp: el('whatsapp')!.value, email: el('email')!.value });
 
       const submit = form.querySelector<HTMLButtonElement>('[data-submit]')!;
       submit.disabled = true;
       submit.textContent = 'Enviando…';
+      if (!preview && !(await waitForTurnstile())) funnel('turnstile_fail', 'timeout');
       const data = new FormData(form);
       data.delete('empresa_web');
+      data.set('whatsapp', c.whatsapp);
+      data.set('email', c.email);
 
       try {
-        if (form.dataset.preview) {
+        if (preview) {
           console.info('[quote-form] preview build, not sent:', Object.fromEntries(data));
         } else {
           const res = await fetch(form.dataset.endpoint!, { method: 'POST', body: data, headers: { Accept: 'application/json' } });
@@ -238,7 +315,7 @@ const opt = '<span class="text-ink-muted font-normal"> (opcional)</span>';
         }));
       } catch {}
       const dest = thankYouPath(valor);
-      setTimeout(() => location.assign(form.dataset.preview ? dest.slice(1) + '.html' : dest), 300);
+      setTimeout(() => location.assign(preview ? dest.slice(1) + '.html' : dest), 300);
     });
   });
 </script>

@@ -32,12 +32,14 @@ Commercial terms (fees, minimums, SLAs) live in one place: `TERMS` in `src/confi
 
 ## Lead form → Cloudflare
 
-The short one-step form (`src/components/QuoteForm.astro`: rubro, need, order value, name, company, WhatsApp, optional email) posts to `/api/lead`, a Cloudflare Pages Function (`functions/api/lead.ts`):
+The short one-step form (`src/components/QuoteForm.astro`): required rubro (preselected on sector pages), order value, need, name, consent, and WhatsApp OR email; company optional posts to `/api/lead`, a Cloudflare Pages Function (`functions/api/lead.ts`):
 
 1. origin check, honeypot, Turnstile, rate limit (5 per IP per 10 min);
 2. server-side validation and lead score (A = USD 10k+, B = "No sé", C = below minimum) — the browser's values are not trusted;
 3. insert into D1 (`migrations/0001_leads.sql`), attachments into R2;
 4. Telegram alert with the attachments; optional JSON forward to n8n (`FORWARD_URL`).
+
+`/api/funnel` stores cookieless funnel events (form_view, form_start, submit_pressed, submit_blocked + field, turnstile_fail, submit_success) per page load, with path, utm_campaign, utm_term and device; no IP, cookies or form contents (`migrations/0002_funnel.sql`, `src/lib/funnel.js`). `/api/funnel.csv` (admin password) returns daily counts; `?view=rows` returns raw events, `?since=YYYY-MM-DD` filters.
 
 `/api/telegram-test` sends a test alert and shows Telegram's exact error. `/api/leads.csv` exports every lead and `/api/files/<key>` serves attachments, both behind HTTP Basic auth (`ADMIN_PASSWORD`). Setup steps: **[docs/cloudflare-setup.md](docs/cloudflare-setup.md)**.
 
