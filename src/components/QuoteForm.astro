@@ -114,7 +114,7 @@ const opt = '<span class="text-ink-muted font-normal"> (opcional)</span>';
 
 <script>
   import { contactCheck, leadScore, thankYouPath } from '../lib/lead.js';
-  import { newPageloadId } from '../lib/funnel.js';
+  import { sendFunnel, pageloadId } from '../lib/funnel-client.js';
 
   const track = (n: string, p: Record<string, unknown> = {}) => (window as any).ddTrack?.(n, p);
   const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
@@ -138,21 +138,8 @@ const opt = '<span class="text-ink-muted font-normal"> (opcional)</span>';
     const preview = !!form.dataset.preview;
 
     // ---- Cookieless funnel counters (one random id per page load; nothing stored in the browser) ----
-    const pv = newPageloadId();
-    el('pv')!.value = pv;
-    const sent = new Set<string>();
-    const funnel = (event: string, detail = '') => {
-      const key = `${event}:${detail}`;
-      if (preview || sent.has(key)) return;
-      sent.add(key);
-      const { get } = attribution();
-      const body = JSON.stringify({ event, detail, pv, path: location.pathname, utm_campaign: get('utm_campaign'), utm_term: get('utm_term') });
-      try {
-        if (!navigator.sendBeacon?.('/api/funnel', new Blob([body], { type: 'text/plain' }))) {
-          fetch('/api/funnel', { method: 'POST', body, keepalive: true }).catch(() => {});
-        }
-      } catch {}
-    };
+    el('pv')!.value = pageloadId();
+    const funnel = sendFunnel;
     (window as any).ddTurnstileError = () => funnel('turnstile_fail', 'widget');
     (window as any).ddTurnstileTimeout = () => funnel('turnstile_fail', 'timeout');
     if ('IntersectionObserver' in window) {

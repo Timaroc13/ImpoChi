@@ -2,6 +2,7 @@
 // Site-wide delegated event tracking + first-touch UTM capture.
 ---
 <script>
+  import { sendFunnel } from '../lib/funnel-client.js';
   const track = (name: string, params: Record<string, unknown> = {}) => (window as any).ddTrack?.(name, params);
 
   // First-touch attribution, kept 90 days in this browser only.
@@ -21,8 +22,8 @@
   document.addEventListener('click', (e) => {
     const el = (e.target as HTMLElement).closest('a,button') as HTMLElement | null;
     if (!el) return;
-    if (el.dataset.wa) track('whatsapp_click', { location: el.dataset.wa });
-    if (el.dataset.cta) track('cta_click', { cta_id: el.dataset.cta });
+    if (el.dataset.wa) { track('whatsapp_click', { location: el.dataset.wa }); sendFunnel('whatsapp_click', el.dataset.wa); }
+    if (el.dataset.cta) { track('cta_click', { cta_id: el.dataset.cta }); sendFunnel('cta_click', el.dataset.cta); }
     if (el.dataset.booking !== undefined) track('book_call_click');
     if (el.dataset.sample) track('sample_download', { file: el.dataset.sample });
   });
@@ -31,10 +32,13 @@
     d.addEventListener('toggle', () => { if (d.open) track('faq_open', { question: d.dataset.faq }); }),
   );
 
-  let scrolled = false;
+  let scrolled50 = false;
+  let scrolled75 = false;
   addEventListener('scroll', () => {
-    if (scrolled) return;
+    if (scrolled75) return;
     const h = document.documentElement;
-    if ((h.scrollTop + innerHeight) / h.scrollHeight >= 0.75) { scrolled = true; track('scroll_75'); }
+    const depth = (h.scrollTop + innerHeight) / h.scrollHeight;
+    if (!scrolled50 && depth >= 0.5) { scrolled50 = true; sendFunnel('scroll_50'); }
+    if (depth >= 0.75) { scrolled75 = true; track('scroll_75'); }
   }, { passive: true });
 </script>

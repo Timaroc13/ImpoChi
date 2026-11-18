@@ -2,13 +2,20 @@
 // One row per event. No cookies, no IP, no form contents: only the event, the page path,
 // utm_campaign / utm_term, device type and, for submit_blocked / turnstile_fail, a short reason.
 
-export const FUNNEL_EVENTS = ['form_view', 'form_start', 'submit_pressed', 'submit_blocked', 'turnstile_fail', 'submit_success'];
+export const FUNNEL_EVENTS = [
+  'form_view', 'form_start', 'submit_pressed', 'submit_blocked', 'turnstile_fail', 'submit_success',
+  'whatsapp_click', 'cta_click', 'scroll_50',
+];
 
 /** Allowed `detail` values per event (anything else is dropped to ''). */
 export const FUNNEL_DETAILS = {
   submit_blocked: ['rubro', 'valor_pedido', 'producto', 'nombre', 'whatsapp', 'email', 'contact', 'consentimiento'],
   turnstile_fail: ['widget', 'timeout', 'siteverify'],
 };
+
+/** Events whose detail is a position on the page (data-wa / data-cta ids such as "hero-maquinaria"). */
+const POSITION_DETAIL = /^[a-z0-9][a-z0-9-]{0,39}$/;
+const POSITION_EVENTS = ['whatsapp_click', 'cta_click'];
 
 /** Max events stored per page load (de-duplication also applies per event + detail). */
 export const FUNNEL_MAX_PER_PAGELOAD = 20;
@@ -32,8 +39,10 @@ export function sanitizeEvent(input) {
   let path = clip(input.path, 200);
   if (!path.startsWith('/')) return null;
   path = path.split('?')[0].split('#')[0].replace(/\.html$/, '').replace(/\/index$/, '') || '/';
-  const allowed = FUNNEL_DETAILS[event] || [];
-  const detail = allowed.includes(input.detail) ? input.detail : '';
+  const raw = typeof input.detail === 'string' ? input.detail : '';
+  const detail = POSITION_EVENTS.includes(event)
+    ? (POSITION_DETAIL.test(raw) ? raw : '')
+    : (FUNNEL_DETAILS[event] || []).includes(raw) ? raw : '';
   return { event, pv, path, utm_campaign: clip(input.utm_campaign, 200), utm_term: clip(input.utm_term, 200), detail };
 }
 
