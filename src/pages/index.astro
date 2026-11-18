@@ -7,7 +7,7 @@ import FounderStrip from '../components/FounderStrip.astro';
 import QuoteForm from '../components/QuoteForm.astro';
 import FaqList from '../components/FaqList.astro';
 import FinalCta from '../components/FinalCta.astro';
-import WaLink from '../components/WaLink.astro';
+import Hero from '../components/Hero.astro';
 import SampleQuote from '../components/SampleQuote.astro';
 import { VERTICALS } from '../data/verticals';
 import { FAQ_GENERAL } from '../data/faq';
@@ -22,19 +22,19 @@ const homeFaq = FAQ_GENERAL.filter((f) => ['¿Cuánto cobrás?', '¿Hay pedido m
   description="Cotizaciones comparables de fábricas verificadas del sur de China, con costo puesto en Argentina. Sin comisiones de fábrica. Pedí la tuya."
   schema={[orgSchema(site), personSchema(site), serviceSchema(site, 'Sourcing en el sur de China para pymes argentinas', '/'), faqSchema(homeFaq)]}
 >
-  <section class="pt-10 md:pt-20">
-    <div class="wrap">
-      <p class="eyebrow">Del lado del comprador · Sur de China</p>
-      <h1 class="mt-4 max-w-[20ch] text-display-m md:text-display">Comprá directo a fábricas en China, a través de alguien de confianza.</h1>
-      <p class="mt-6 max-w-[58ch] text-[18px] leading-[28px] text-ink">Cotizaciones en China con costo logístico completo para Argentina.</p>
-      <div class="mt-6 flex flex-wrap gap-4">
-        <a href="/cotizacion" class="btn-primary" data-cta="hero-home">Pedí tu cotización</a>
-        <WaLink location="hero-home" />
-      </div>
-      <p class="mt-6 text-small text-ink-muted">Base en Hong Kong · Sin comisiones de fábricas</p>
-    </div>
-    <hr class="equator mt-10 md:mt-20" />
-  </section>
+  <Hero
+    eyebrow="Del lado del comprador · Sur de China"
+    title="Comprá directo a fábricas en China, a través de alguien de confianza."
+    sub="Cotizaciones en China con costo logístico completo para Argentina."
+    proofs={[
+      '2 a 4 cotizaciones comparables, con costo puesto en Argentina',
+      'Fábricas verificadas e inspección antes de pagar el saldo',
+      'Sin comisiones de fábrica. Base en Hong Kong',
+    ]}
+    ctaHref="#cotizar"
+    ctaId="hero-home"
+    waLocation="hero-home"
+  />
 
   <ValueProps />
 

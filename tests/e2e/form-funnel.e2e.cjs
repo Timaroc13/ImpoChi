@@ -47,6 +47,10 @@ async function openForm(page, path) {
   const p = await ctx.newPage();
   const f = await openForm(p, '/maquinaria?utm_campaign=maquinaria&utm_term=e2e%20term');
   assert.equal(await p.inputValue(`${f} [name=rubro]`), 'maquinaria', 'rubro preselected');
+  await p.click('main section [data-cta="hero-maquinaria"]');        // cta_click (hero)
+  await p.evaluate(() => { const a = document.querySelector('main section [data-wa="hero-maquinaria"]'); a.removeAttribute('target'); a.addEventListener('click', (e) => e.preventDefault()); a.click(); }); // whatsapp_click (hero)
+  await p.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight * 0.6)); // scroll_50
+  await p.waitForTimeout(200);
   await p.locator(f).scrollIntoViewIfNeeded();
   await p.waitForTimeout(300);
   await p.click(`${f} [name=producto]`);
@@ -97,6 +101,9 @@ async function openForm(page, path) {
   expect(count(m, 'submit_success') === 1, 'submit_success (server-side, with campaign + term)');
   expect(m.every((r) => r.device === 'mobile'), 'device = mobile');
   expect(count(rows.filter((r) => r.path === '/packaging'), 'submit_success') === 1, 'submit_success on /packaging');
+  expect(count(m, 'cta_click', 'hero-maquinaria') === 1, 'cta_click: hero-maquinaria (with campaign + term)');
+  expect(count(m, 'whatsapp_click', 'hero-maquinaria') === 1, 'whatsapp_click: hero-maquinaria (with campaign + term)');
+  expect(count(m, 'scroll_50') === 1, 'scroll_50 (with campaign + term)');
 
   const all = await leads();
   const newLeads = all.slice(0, all.length - leadsBefore);

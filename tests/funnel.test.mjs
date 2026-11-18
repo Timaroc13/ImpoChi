@@ -5,7 +5,7 @@ import { sanitizeEvent, deviceFromUA, FUNNEL_EVENTS, newPageloadId } from '../sr
 const base = { pv: 'abc123def456', path: '/maquinaria', utm_campaign: 'maquinaria', utm_term: 'importar maquinaria de china' };
 
 test('every funnel event is accepted with its context', () => {
-  assert.deepEqual(FUNNEL_EVENTS, ['form_view', 'form_start', 'submit_pressed', 'submit_blocked', 'turnstile_fail', 'submit_success']);
+  assert.deepEqual(FUNNEL_EVENTS, ['form_view', 'form_start', 'submit_pressed', 'submit_blocked', 'turnstile_fail', 'submit_success', 'whatsapp_click', 'cta_click', 'scroll_50']);
   for (const event of FUNNEL_EVENTS) {
     const r = sanitizeEvent({ ...base, event });
     assert.equal(r.event, event);
@@ -49,4 +49,15 @@ test('device type from user agent', () => {
 
 test('page-load ids match the accepted format', () => {
   for (let i = 0; i < 50; i++) assert.match(newPageloadId(), /^[a-z0-9]{8,32}$/);
+});
+
+test('whatsapp_click and cta_click keep their position on the page; scroll_50 has none', () => {
+  for (const pos of ['hero-maquinaria', 'hero-home', 'floating', 'final', 'founder', 'header', 'menu']) {
+    assert.equal(sanitizeEvent({ ...base, event: 'whatsapp_click', detail: pos }).detail, pos);
+    assert.equal(sanitizeEvent({ ...base, event: 'cta_click', detail: pos }).detail, pos);
+  }
+  assert.equal(sanitizeEvent({ ...base, event: 'cta_click', detail: '<script>' }).detail, '');
+  assert.equal(sanitizeEvent({ ...base, event: 'cta_click', detail: 'x'.repeat(41) }).detail, '');
+  assert.equal(sanitizeEvent({ ...base, event: 'scroll_50', detail: 'hero-home' }).detail, '');
+  assert.equal(sanitizeEvent({ ...base, event: 'scroll_50' }).utm_term, 'importar maquinaria de china');
 });

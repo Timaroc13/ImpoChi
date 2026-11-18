@@ -1,0 +1,38 @@
+---
+// First screen. On a phone (390×844) the headline, three proof lines and both actions fit without scrolling;
+// the longer sub-headline and the small print only show from md up.
+import WaLink from './WaLink.astro';
+interface Props {
+  eyebrow: string;
+  title: string;
+  sub?: string;
+  proofs: [string, string, string];
+  ctaHref: string;
+  ctaId: string;
+  waLocation: string;
+  waText?: string;
+  smallPrint?: string;
+}
+const { eyebrow, title, sub, proofs, ctaHref, ctaId, waLocation, waText, smallPrint } = Astro.props;
+---
+<section class="pt-6 md:pt-20">
+  <div class="wrap">
+    <p class="eyebrow">{eyebrow}</p>
+    <h1 class="mt-2 max-w-[22ch] text-h1-m text-balance md:mt-4 md:text-display">{title}</h1>
+    {sub && <p class="mt-6 hidden max-w-[58ch] text-[18px] leading-[28px] text-ink md:block">{sub}</p>}
+    <ul class="mt-4 max-w-[56ch] border-t border-line md:mt-6">
+      {proofs.map((p) => (
+        <li class="flex gap-2 border-b border-line py-2 text-body md:py-3">
+          <span class="mt-[9px] h-2 w-2 shrink-0 bg-silt" aria-hidden="true"></span>
+          <span>{p}</span>
+        </li>
+      ))}
+    </ul>
+    <div class="mt-4 grid gap-2 sm:flex sm:flex-wrap sm:gap-4 md:mt-6">
+      <a href={ctaHref} class="btn-primary w-full sm:w-auto" data-cta={ctaId}>Pedí tu cotización</a>
+      <WaLink location={waLocation} text={waText} class="btn-secondary w-full sm:w-auto" />
+    </div>
+    {smallPrint && <p class="mt-6 hidden text-small text-ink-muted md:block">{smallPrint}</p>}
+  </div>
+  <hr class="equator mt-8 md:mt-20" />
+</section>
