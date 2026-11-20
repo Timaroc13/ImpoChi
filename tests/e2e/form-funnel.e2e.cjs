@@ -4,6 +4,10 @@
 //   npx wrangler d1 migrations apply DB --local && npm run build
 //   npx wrangler pages dev --port 8788      (in another terminal)
 //   BASE_URL=http://127.0.0.1:8788 ADMIN_PASSWORD=test-pass npm run test:e2e
+// For the captcha checks build with a site key and run with a secret, e.g.
+//   PUBLIC_TURNSTILE_SITE_KEY=1x00000000000000000000AA npm run build
+//   npx wrangler pages dev --port 8788 --binding TURNSTILE_SECRET=2x0000000000000000000000000000000AA
+// and block challenges.cloudflare.com (the test does) so the widget errors like it did in production.
 // Needs Playwright (preinstalled in Claude cloud sessions; otherwise `npx playwright install chromium`).
 const { chromium } = require('playwright');
 const assert = require('node:assert/strict');
@@ -44,8 +48,12 @@ async function openForm(page, path) {
   const ctx = await b.newContext({ viewport: { width: 390, height: 844 }, userAgent: 'Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) Mobile/15E148' });
 
   // --- Page load 1 (/maquinaria): view, start, blocked ×3 (valor, contact, whatsapp), then success with email only
+  // Simulate the production failure: Turnstile's script cannot load.
+  await ctx.route('https://challenges.cloudflare.com/**', (r) => r.abort());
   const p = await ctx.newPage();
   const f = await openForm(p, '/maquinaria?utm_campaign=maquinaria&utm_term=e2e%20term');
+  const tsScripts = () => p.evaluate(() => document.querySelectorAll('script[src*="challenges.cloudflare.com"]').length);
+  assert.equal(await tsScripts(), 0, 'no captcha script on page load');
   assert.equal(await p.inputValue(`${f} [name=rubro]`), 'maquinaria', 'rubro preselected');
   await p.click('main section [data-cta="hero-maquinaria"]');        // cta_click (hero)
   await p.evaluate(() => { const a = document.querySelector('main section [data-wa="hero-maquinaria"]'); a.removeAttribute('target'); a.addEventListener('click', (e) => e.preventDefault()); a.click(); }); // whatsapp_click (hero)
@@ -53,7 +61,10 @@ async function openForm(page, path) {
   await p.waitForTimeout(200);
   await p.locator(f).scrollIntoViewIfNeeded();
   await p.waitForTimeout(300);
-  await p.click(`${f} [name=producto]`);
+  await p.click(`${f} [name=producto]`);                             // form_start → captcha loads now
+  await p.waitForTimeout(300);
+  const hasSlot = await p.evaluate(() => !!document.querySelector('[data-turnstile-slot]'));
+  if (hasSlot) assert.equal(await tsScripts(), 1, 'captcha script requested on form_start');
   await p.click(`${f} [data-submit]`);                               // blocked: valor_pedido
   await p.selectOption(`${f} [name=valor_pedido]`, '25-50k');
   await p.fill(`${f} [name=producto]`, 'E2E prueba: cajas impresas 5.000 unidades');
@@ -65,9 +76,13 @@ async function openForm(page, path) {
   await p.click(`${f} [data-submit]`);                               // blocked: whatsapp (invalid)
   await p.fill(`${f} [name=whatsapp]`, '+54 9 ');
   await p.fill(`${f} [name=email]`, 'e2e-email@example.com');
-  await p.evaluate(() => window.ddTurnstileError?.());                // turnstile_fail (widget) via the callback
+  if (hasSlot) {
+    assert.equal(await p.evaluate(() => document.querySelector('[data-turnstile-slot]').hidden), true, 'failed captcha is hidden');
+    assert.equal(await p.locator(`${f} [data-error]`).isVisible(), false, 'no error shown to the visitor');
+  }
   await Promise.all([p.waitForURL(/gracias/), p.click(`${f} [data-submit]`)]);
   const ev1 = await p.evaluate(() => sessionStorage.getItem('e2e_ev'));
+  globalThis.__hasSlot = hasSlot;
   assert.match(ev1, /generate_lead/, 'generate_lead fired');
 
   // --- Page load 2 (/packaging): WhatsApp only, no empresa
@@ -97,7 +112,11 @@ async function openForm(page, path) {
   expect(count(m, 'submit_blocked', 'valor_pedido') === 1, 'submit_blocked: valor_pedido');
   expect(count(m, 'submit_blocked', 'contact') === 1, 'submit_blocked: contact (neither WhatsApp nor email)');
   expect(count(m, 'submit_blocked', 'whatsapp') === 1, 'submit_blocked: whatsapp (invalid)');
-  expect(count(m, 'turnstile_fail', 'widget') === 1, 'turnstile_fail: widget');
+  if (globalThis.__hasSlot) {
+    expect(count(m, 'turnstile_fail', 'widget') === 1, 'turnstile_fail: widget, counted once, after form_start');
+    const tsAt = m.find((r) => r.event === 'turnstile_fail').created_at;
+    expect(tsAt >= m.find((r) => r.event === 'form_start').created_at, 'captcha error only after form_start, never on page load');
+  }
   expect(count(m, 'submit_success') === 1, 'submit_success (server-side, with campaign + term)');
   expect(m.every((r) => r.device === 'mobile'), 'device = mobile');
   expect(count(rows.filter((r) => r.path === '/packaging'), 'submit_success') === 1, 'submit_success on /packaging');
@@ -112,5 +131,8 @@ async function openForm(page, path) {
   expect(em && em.email === 'e2e-email@example.com' && em.whatsapp === '', 'lead with email only stored');
   expect(wa && wa.whatsapp === '+5493514123456' && wa.email === '' && wa.empresa === '', 'lead with WhatsApp only and no empresa stored');
   expect(em.utm_campaign === 'maquinaria' && em.utm_term === 'e2e term', 'lead keeps utm_campaign / utm_term');
+  if (globalThis.__hasSlot) {
+    expect(em.turnstile === 'unverified' && wa.turnstile === 'unverified', 'captcha failed → leads still accepted, flagged turnstile=unverified');
+  }
   console.log('\nall e2e checks passed');
 })().catch((e) => { console.error(e); process.exit(1); });

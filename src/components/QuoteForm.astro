@@ -87,8 +87,9 @@ const opt = '<span class="text-ink-muted font-normal"> (opcional)</span>';
       </label>
 
       {SITE.turnstileSiteKey && !SITE.preview && (
-        <div class="cf-turnstile" data-sitekey={SITE.turnstileSiteKey} data-language="es" data-appearance="interaction-only" data-theme="light" data-error-callback="ddTurnstileError" data-timeout-callback="ddTurnstileTimeout"></div>
+        <div data-turnstile-slot data-sitekey={SITE.turnstileSiteKey}></div>
       )}
+      <input type="hidden" name="turnstile_state" value="none" />
 
       <input type="hidden" name="utm_source" />
       <input type="hidden" name="utm_medium" />
@@ -110,7 +111,6 @@ const opt = '<span class="text-ink-muted font-normal"> (opcional)</span>';
   </div>
 </section>
 
-{SITE.turnstileSiteKey && !SITE.preview && <script is:inline src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>}
 
 <script>
   import { contactCheck, leadScore, thankYouPath } from '../lib/lead.js';
@@ -140,8 +140,46 @@ const opt = '<span class="text-ink-muted font-normal"> (opcional)</span>';
     // ---- Cookieless funnel counters (one random id per page load; nothing stored in the browser) ----
     el('pv')!.value = pageloadId();
     const funnel = sendFunnel;
-    (window as any).ddTurnstileError = () => funnel('turnstile_fail', 'widget');
-    (window as any).ddTurnstileTimeout = () => funnel('turnstile_fail', 'timeout');
+
+    // ---- Turnstile: loaded and rendered only after the first field interaction (form_start), managed mode,
+    // invisible unless Cloudflare needs a challenge. Errors are silent and never block submit: the server
+    // accepts the lead and flags it turnstile_unverified.
+    const tsSlot = form.querySelector<HTMLDivElement>('[data-turnstile-slot]');
+    const tsState = el('turnstile_state')!;
+    const setTs = (state: 'pending' | 'ok' | 'error' | 'timeout') => { tsState.value = state; };
+    const tsFail = (reason: 'widget' | 'timeout') => {
+      if (tsState.value === 'ok') return;
+      setTs(reason === 'widget' ? 'error' : 'timeout');
+      funnel('turnstile_fail', reason);
+      if (tsSlot) tsSlot.hidden = true; // never show a captcha error to the visitor
+    };
+    let tsRequested = false;
+    const startTurnstile = () => {
+      if (!tsSlot || tsRequested) return;
+      tsRequested = true;
+      setTs('pending');
+      const render = () => {
+        try {
+          (window as any).turnstile.render(tsSlot, {
+            sitekey: tsSlot.dataset.sitekey,
+            appearance: 'interaction-only',
+            language: 'es',
+            theme: 'light',
+            callback: () => { setTs('ok'); tsSlot.hidden = false; },
+            'error-callback': () => { tsFail('widget'); return true; }, // true = handled, Turnstile shows nothing
+            'timeout-callback': () => tsFail('timeout'),
+            'expired-callback': () => { try { (window as any).turnstile.reset(tsSlot); } catch {} },
+          });
+        } catch { tsFail('widget'); }
+      };
+      if ((window as any).turnstile?.render) return render();
+      (window as any).ddTurnstileReady = render;
+      const sc = document.createElement('script');
+      sc.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit&onload=ddTurnstileReady';
+      sc.async = true;
+      sc.onerror = () => tsFail('widget');
+      document.head.appendChild(sc);
+    };
     if ('IntersectionObserver' in window) {
       const io = new IntersectionObserver((entries) => {
         if (entries.some((e) => e.isIntersecting)) { funnel('form_view'); io.disconnect(); }
@@ -164,6 +202,7 @@ const opt = '<span class="text-ink-muted font-normal"> (opcional)</span>';
       if (started || !(e.target as HTMLElement).matches('input:not([type=hidden]),select,textarea')) return;
       started = true;
       funnel('form_start');
+      startTurnstile();
       track('form_start', { rubro: rubroSel.value || 'none' });
     });
 
@@ -239,11 +278,13 @@ const opt = '<span class="text-ink-muted font-normal"> (opcional)</span>';
     form.addEventListener('input', recheck);
     form.addEventListener('change', recheck);
 
-    // Turnstile runs in the background; give it a few seconds if the visitor submits very fast.
+    // Give a pending Turnstile check up to 8 s if the visitor submits very fast; never wait after an error.
     const waitForTurnstile = async () => {
-      if (!form.querySelector('.cf-turnstile')) return true;
+      if (!tsSlot) return true;
+      startTurnstile();
       for (let i = 0; i < 16; i++) {
-        if (el('cf-turnstile-response')?.value) return true;
+        if (tsState.value === 'ok' || el('cf-turnstile-response')?.value) { setTs('ok'); return true; }
+        if (tsState.value === 'error' || tsState.value === 'timeout') return true; // already counted
         await sleep(500);
       }
       return false;
@@ -268,7 +309,7 @@ const opt = '<span class="text-ink-muted font-normal"> (opcional)</span>';
       const submit = form.querySelector<HTMLButtonElement>('[data-submit]')!;
       submit.disabled = true;
       submit.textContent = 'Enviando…';
-      if (!preview && !(await waitForTurnstile())) funnel('turnstile_fail', 'timeout');
+      if (!preview && !(await waitForTurnstile())) tsFail('timeout');
       const data = new FormData(form);
       data.delete('empresa_web');
       data.set('whatsapp', c.whatsapp);
