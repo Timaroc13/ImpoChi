@@ -1,5 +1,5 @@
 // POST /api/lead — receives the RFQ form (multipart/form-data).
-// 1) origin + honeypot + Turnstile + rate limit  2) validate  3) save to D1 (+ files to R2)
+// 1) origin + honeypot + rate limit (+ Turnstile, which flags but never rejects)  2) validate  3) save to D1 (+ files to R2)
 // 4) Telegram alert with attachments  5) optional forward to n8n.
 import { isValidCuit, contactCheck, leadScore, ORDER_VALUES, TIMELINES } from '../../src/lib/lead.js';
 import { recordFunnelEvent } from '../_lib/funnel';
@@ -15,7 +15,7 @@ const TEXT_FIELDS = {
   rubro: 20, producto: 2000, especificaciones: 3000, cantidad: 100, precio_objetivo: 100, valor_pedido: 20, plazo: 20,
   experiencia: 20, nombre: 120, empresa: 120, ri: 10, cuit: 20, cargo: 60, whatsapp: 30, email: 160, provincia: 60,
   consentimiento: 5, utm_source: 200, utm_medium: 200, utm_campaign: 200, utm_term: 200, utm_content: 200, gclid: 300,
-  landing_page: 300, page: 300, pv: 40,
+  landing_page: 300, page: 300, pv: 40, turnstile_state: 20,
 } as const;
 type Field = keyof typeof TEXT_FIELDS;
 
@@ -32,24 +32,34 @@ export const onRequestPost = async ({ request, env, waitUntil }: Ctx) => {
   // Honeypot: bots fill every field. Pretend success.
   if (String(form.get('empresa_web') || '').trim()) return json({ ok: true });
 
-  // Turnstile (skipped when no secret is configured, e.g. local dev).
+  // Turnstile: verify when a token is present, but never reject. A widget error, timeout, missing or rejected
+  // token marks the lead 'unverified'; the honeypot above and the per-IP rate limit below still apply.
+  let turnstile: 'verified' | 'unverified' | 'not_configured' = 'not_configured';
+  let turnstileReason = '';
   if (env.TURNSTILE_SECRET) {
     const token = String(form.get('cf-turnstile-response') || '');
-    const body = new FormData();
-    body.append('secret', env.TURNSTILE_SECRET);
-    body.append('response', token);
-    const ip = request.headers.get('CF-Connecting-IP');
-    if (ip) body.append('remoteip', ip);
-    let v: { success?: boolean } = {};
-    try {
-      const r = await fetch('https://challenges.cloudflare.com/turnstile/v0/siteverify', { method: 'POST', body });
-      v = (await r.json()) as { success?: boolean };
-    } catch (e) {
-      console.error('turnstile siteverify unreachable', e);
-    }
-    if (!v.success) {
-      await recordFunnelEvent(env, funnelInput(form, 'turnstile_fail', 'siteverify'), request.headers.get('User-Agent'));
-      return json({ ok: false, error: 'captcha' }, 403);
+    if (!token) {
+      turnstile = 'unverified';
+      turnstileReason = String(form.get('turnstile_state') || 'missing').slice(0, 20) || 'missing';
+    } else {
+      const body = new FormData();
+      body.append('secret', env.TURNSTILE_SECRET);
+      body.append('response', token);
+      const cip = request.headers.get('CF-Connecting-IP');
+      if (cip) body.append('remoteip', cip);
+      let v: { success?: boolean } = {};
+      try {
+        const r = await fetch('https://challenges.cloudflare.com/turnstile/v0/siteverify', { method: 'POST', body });
+        v = (await r.json()) as { success?: boolean };
+      } catch (e) {
+        console.error('turnstile siteverify unreachable', e);
+      }
+      if (v.success) turnstile = 'verified';
+      else {
+        turnstile = 'unverified';
+        turnstileReason = 'siteverify';
+        await recordFunnelEvent(env, funnelInput(form, 'turnstile_fail', 'siteverify'), request.headers.get('User-Agent'));
+      }
     }
   }
 
@@ -108,23 +118,34 @@ export const onRequestPost = async ({ request, env, waitUntil }: Ctx) => {
     }
   }
 
-  const { pv: _pv, ...fields } = v;
+  const { pv: _pv, turnstile_state: _ts, ...fields } = v;
   const row = {
     id, created_at: createdAt, lead_score: score, ...fields,
     files: stored.length ? JSON.stringify(stored) : null,
     ip_hash: ipHash,
     country: request.headers.get('CF-IPCountry') || null,
     user_agent: (request.headers.get('User-Agent') || '').slice(0, 300),
+    turnstile,
   };
-  const cols = Object.keys(row);
-  await env.DB.prepare(`INSERT INTO leads (${cols.join(',')}) VALUES (${cols.map(() => '?').join(',')})`)
-    .bind(...cols.map((c) => (row as Record<string, unknown>)[c] ?? null))
-    .run();
+  const insert = (r: Record<string, unknown>) => {
+    const cols = Object.keys(r);
+    return env.DB.prepare(`INSERT INTO leads (${cols.join(',')}) VALUES (${cols.map(() => '?').join(',')})`)
+      .bind(...cols.map((c) => r[c] ?? null))
+      .run();
+  };
+  try {
+    await insert(row);
+  } catch (e) {
+    // Before migrations/0003 is applied there is no `turnstile` column: never lose the lead over it.
+    if (!/turnstile/i.test(String(e))) throw e;
+    const { turnstile: _t, ...rest } = row;
+    await insert({ ...rest, notas: turnstile === 'unverified' ? `turnstile_unverified (${turnstileReason})` : null });
+  }
 
   await recordFunnelEvent(env, funnelInput(form, 'submit_success'), request.headers.get('User-Agent'));
 
   // Notifications run after the response; a failure here never loses the lead (it is already in D1).
-  waitUntil(notifyTelegram(env, row, buffers, new URL(request.url).origin).catch((e) => console.error('telegram', e)));
+  waitUntil(notifyTelegram(env, { ...row, turnstile_reason: turnstileReason }, buffers, new URL(request.url).origin).catch((e) => console.error('telegram', e)));
   if (env.FORWARD_URL) {
     waitUntil(
       fetch(env.FORWARD_URL, {
@@ -156,6 +177,7 @@ async function notifyTelegram(env: Env, r: Record<string, any>, files: { name: s
   const wa = String(r.whatsapp || '').replace(/\D/g, '');
   const lines = [
     `<b>${r.lead_score === 'A' ? '🟢' : r.lead_score === 'B' ? '🟡' : '⚪️'} Lead ${e(r.lead_score)} · ${e(r.rubro)} · ${e(LABEL(ORDER_VALUES, r.valor_pedido))}</b>`,
+    r.turnstile === 'unverified' ? `⚠️ Captcha no verificado (${e(r.turnstile_reason || 'sin token')}): revisá que sea una persona` : null,
     `<b>${e(r.empresa || '(sin empresa)')}</b> — ${e(r.nombre)}`,
     '',
     e(r.producto.slice(0, 1500)),
