@@ -1,14 +1,18 @@
 ---
-// Short RFQ form. Posts multipart/form-data to /api/lead (functions/api/lead.ts).
-// Required: rubro, valor_pedido, producto, nombre, consentimiento, and WhatsApp OR email.
+// RFQ form. Posts multipart/form-data to /api/lead (functions/api/lead.ts).
+// quick (home + sector pages): WhatsApp, "¿Qué necesitás traer de China?" and consent; rubro is a hidden field.
+// full (/cotizacion): rubro, valor_pedido, producto, nombre, consentimiento, and WhatsApp OR email.
 // Sends cookieless funnel events to /api/funnel (src/lib/funnel.js).
 import { RUBROS } from '../data/verticals';
 import { ORDER_VALUES } from '../lib/lead.js';
 import { SITE, hasWhatsApp } from '../config';
 import { waLink } from '../lib/lead.js';
+import { TERMS } from '../config';
+import { fmtUSD } from '../lib/format.js';
 
-interface Props { rubro?: string; heading?: string; id?: string }
-const { rubro = '', heading = 'Pedí tu cotización', id = 'cotizar' } = Astro.props;
+interface Props { rubro?: string; heading?: string; id?: string; quick?: boolean }
+const { rubro = '', heading = 'Pedí tu cotización', id = 'cotizar', quick = false } = Astro.props;
+const quickPlaceholder = RUBROS.find((r) => r.value === rubro)?.placeholder ?? 'Producto, cantidad aproximada y lo que sepas de las especificaciones.';
 
 const fallbackWa = hasWhatsApp ? waLink(SITE.whatsapp, 'Hola Octa, intenté mandar el formulario y no funcionó. Te cuento mi pedido: ') : '';
 const field = 'mt-2 block w-full rounded-sm border border-line bg-paper-raised px-4 py-3 text-body text-ink placeholder:text-ink-muted/80 aria-[invalid=true]:border-signal';
@@ -20,66 +24,86 @@ const opt = '<span class="text-ink-muted font-normal"> (opcional)</span>';
     <h2 id={`${id}-title`} class="text-h1-m md:text-h1">{heading}</h2>
     {SITE.preview && <p class="mt-4 rounded-sm bg-river-soft p-4 text-small text-ink">Vista previa: este formulario no envía datos. Al terminar te lleva a la página de confirmación.</p>}
     <p class="mt-2 text-ink-muted">Un minuto. Te respondo en 24 h hábiles, hora de Buenos Aires.</p>
+    {quick && <p class="mt-2 text-small text-ink-muted" data-min-order>Pedido mínimo {fmtUSD(TERMS.minOrder)}.</p>}
 
     <form
       class="card mt-6 space-y-6 md:p-10"
       data-quote-form
       data-endpoint={SITE.formEndpoint}
       data-preview={SITE.preview ? '1' : undefined}
+      data-variant={quick ? 'quick' : 'full'}
       novalidate
       enctype="multipart/form-data"
     >
       <!-- honeypot -->
       <div class="hidden" aria-hidden="true"><label>No completar <input type="text" name="empresa_web" tabindex="-1" autocomplete="off" /></label></div>
 
-      <div class="grid gap-6 md:grid-cols-2">
-        <div>
-          <label class={labelCls} for={`${id}-rubro`}>Rubro</label>
-          <select id={`${id}-rubro`} name="rubro" required class={field} data-rubro-select>
-            <option value="" disabled selected={!rubro}>Elegí una opción</option>
-            {RUBROS.map((r) => <option value={r.value} selected={r.value === rubro} data-placeholder={r.placeholder}>{r.label}</option>)}
-          </select>
-        </div>
-        <div>
-          <label class={labelCls} for={`${id}-valor`}>Valor estimado del pedido</label>
-          <select id={`${id}-valor`} name="valor_pedido" required class={field}>
-            <option value="" disabled selected>Elegí una opción</option>
-            {ORDER_VALUES.map((o) => <option value={o.value}>{o.label}</option>)}
-          </select>
-        </div>
-      </div>
-
-      <div>
-        <label class={labelCls} for={`${id}-producto`}>¿Qué necesitás?</label>
-        <textarea id={`${id}-producto`} name="producto" rows="3" required minlength="10" maxlength="2000" class={field} data-specs placeholder={RUBROS.find((r) => r.value === rubro)?.placeholder ?? 'Producto, cantidad y lo que sepas de las especificaciones.'}></textarea>
-      </div>
-
-      <div class="grid gap-6 md:grid-cols-2">
-        <div>
-          <label class={labelCls} for={`${id}-nombre`}>Nombre</label>
-          <input id={`${id}-nombre`} name="nombre" type="text" required autocomplete="name" maxlength="120" class={field} />
-        </div>
-        <div>
-          <label class={labelCls} for={`${id}-empresa`}>Empresa<Fragment set:html={opt} /></label>
-          <input id={`${id}-empresa`} name="empresa" type="text" autocomplete="organization" maxlength="120" class={field} />
-        </div>
-      </div>
-
-      <fieldset data-contact>
-        <legend class="font-semibold">¿Cómo te contacto?</legend>
-        <p class="mt-1 text-small text-ink-muted" id={`${id}-contact-hint`}>WhatsApp o email: con uno alcanza.</p>
-        <div class="mt-2 grid gap-6 md:grid-cols-2">
+      {quick ? (
+        <>
+          <input type="hidden" name="rubro" value={rubro} data-rubro-select />
+          <input type="hidden" name="form_variant" value="quick" />
           <div>
-            <label class={labelCls} for={`${id}-wa`}>WhatsApp</label>
-            <input id={`${id}-wa`} name="whatsapp" type="tel" autocomplete="tel" inputmode="tel" maxlength="24" class={field} value="+54 9 " data-phone aria-describedby={`${id}-contact-hint`} />
-            <p class="mt-1 text-small text-ink-muted">Con código de área, sin 0 ni 15.</p>
+            <label class={labelCls} for={`${id}-wa`}>Tu WhatsApp</label>
+            <input id={`${id}-wa`} name="whatsapp" type="tel" required autocomplete="tel" inputmode="tel" maxlength="24" class={field} value="+54 9 " data-phone aria-describedby={`${id}-wa-hint`} />
+            <p class="mt-1 text-small text-ink-muted" id={`${id}-wa-hint`}>Con código de área, sin 0 ni 15.</p>
           </div>
           <div>
-            <label class={labelCls} for={`${id}-email`}>Email</label>
-            <input id={`${id}-email`} name="email" type="email" autocomplete="email" maxlength="160" class={field} aria-describedby={`${id}-contact-hint`} />
+            <label class={labelCls} for={`${id}-producto`}>¿Qué necesitás traer de China?</label>
+            <textarea id={`${id}-producto`} name="producto" rows="3" required maxlength="2000" class={field} data-specs placeholder={quickPlaceholder}></textarea>
+          </div>
+        </>
+      ) : (
+        <>
+      <div class="grid gap-6 md:grid-cols-2">
+          <div>
+            <label class={labelCls} for={`${id}-rubro`}>Rubro</label>
+            <select id={`${id}-rubro`} name="rubro" required class={field} data-rubro-select>
+              <option value="" disabled selected={!rubro}>Elegí una opción</option>
+              {RUBROS.map((r) => <option value={r.value} selected={r.value === rubro} data-placeholder={r.placeholder}>{r.label}</option>)}
+            </select>
+          </div>
+          <div>
+            <label class={labelCls} for={`${id}-valor`}>Valor estimado del pedido</label>
+            <select id={`${id}-valor`} name="valor_pedido" required class={field}>
+              <option value="" disabled selected>Elegí una opción</option>
+              {ORDER_VALUES.map((o) => <option value={o.value}>{o.label}</option>)}
+            </select>
           </div>
         </div>
-      </fieldset>
+  
+        <div>
+          <label class={labelCls} for={`${id}-producto`}>¿Qué necesitás?</label>
+          <textarea id={`${id}-producto`} name="producto" rows="3" required minlength="10" maxlength="2000" class={field} data-specs placeholder={RUBROS.find((r) => r.value === rubro)?.placeholder ?? 'Producto, cantidad y lo que sepas de las especificaciones.'}></textarea>
+        </div>
+  
+        <div class="grid gap-6 md:grid-cols-2">
+          <div>
+            <label class={labelCls} for={`${id}-nombre`}>Nombre</label>
+            <input id={`${id}-nombre`} name="nombre" type="text" required autocomplete="name" maxlength="120" class={field} />
+          </div>
+          <div>
+            <label class={labelCls} for={`${id}-empresa`}>Empresa<Fragment set:html={opt} /></label>
+            <input id={`${id}-empresa`} name="empresa" type="text" autocomplete="organization" maxlength="120" class={field} />
+          </div>
+        </div>
+  
+        <fieldset data-contact>
+          <legend class="font-semibold">¿Cómo te contacto?</legend>
+          <p class="mt-1 text-small text-ink-muted" id={`${id}-contact-hint`}>WhatsApp o email: con uno alcanza.</p>
+          <div class="mt-2 grid gap-6 md:grid-cols-2">
+            <div>
+              <label class={labelCls} for={`${id}-wa`}>WhatsApp</label>
+              <input id={`${id}-wa`} name="whatsapp" type="tel" autocomplete="tel" inputmode="tel" maxlength="24" class={field} value="+54 9 " data-phone aria-describedby={`${id}-contact-hint`} />
+              <p class="mt-1 text-small text-ink-muted">Con código de área, sin 0 ni 15.</p>
+            </div>
+            <div>
+              <label class={labelCls} for={`${id}-email`}>Email</label>
+              <input id={`${id}-email`} name="email" type="email" autocomplete="email" maxlength="160" class={field} aria-describedby={`${id}-contact-hint`} />
+            </div>
+          </div>
+        </fieldset>
+        </>
+      )}
 
       <label class="flex items-start gap-2 text-small">
         <input type="checkbox" name="consentimiento" value="si" required class="mt-1 accent-river" />
@@ -131,9 +155,10 @@ const opt = '<span class="text-ink-muted font-normal"> (opcional)</span>';
   document.querySelectorAll<HTMLFormElement>('form[data-quote-form]').forEach((form) => {
     const errorBox = form.querySelector<HTMLDivElement>('[data-error]')!;
     const fallback = form.querySelector<HTMLTemplateElement>('template[data-fallback]')!;
+    const quick = form.dataset.variant === 'quick';
     const rubroSel = form.querySelector<HTMLSelectElement>('[data-rubro-select]')!;
     const specs = form.querySelector<HTMLTextAreaElement>('[data-specs]')!;
-    const contactBox = form.querySelector<HTMLFieldSetElement>('[data-contact]')!;
+    const contactBox = form.querySelector<HTMLFieldSetElement>('[data-contact]');
     const el = (name: string) => form.elements.namedItem(name) as HTMLInputElement | null;
     const preview = !!form.dataset.preview;
 
@@ -187,19 +212,24 @@ const opt = '<span class="text-ink-muted font-normal"> (opcional)</span>';
       io.observe(form);
     }
 
-    // Pre-fill rubro from ?rubro= (explicit links only; sector pages preselect it server-side).
-    const qp = new URLSearchParams(location.search).get('rubro');
-    if (qp && [...rubroSel.options].some((o) => o.value === qp)) rubroSel.value = qp;
-    const syncPlaceholder = () => {
-      const ph = rubroSel.selectedOptions[0]?.dataset.placeholder;
-      if (ph) specs.placeholder = ph;
-    };
-    syncPlaceholder();
-    rubroSel.addEventListener('change', syncPlaceholder);
+    // Full form only: pre-fill rubro from ?rubro= (explicit links) and match the placeholder to it.
+    if (!quick) {
+      const qp = new URLSearchParams(location.search).get('rubro');
+      if (qp && [...rubroSel.options].some((o) => o.value === qp)) rubroSel.value = qp;
+      const syncPlaceholder = () => {
+        const ph = rubroSel.selectedOptions?.[0]?.dataset.placeholder;
+        if (ph) specs.placeholder = ph;
+      };
+      syncPlaceholder();
+      rubroSel.addEventListener('change', syncPlaceholder);
+    }
 
     let started = false;
     form.addEventListener('focusin', (e) => {
-      if (started || !(e.target as HTMLElement).matches('input:not([type=hidden]),select,textarea')) return;
+      const t = e.target as HTMLInputElement;
+      if (!t.matches('input:not([type=hidden]),select,textarea') || t.name === 'empresa_web') return;
+      funnel('form_field_focus', t.name); // first focus per field (sendFunnel de-duplicates per page load)
+      if (started) return;
       started = true;
       funnel('form_start');
       startTurnstile();
@@ -207,7 +237,7 @@ const opt = '<span class="text-ink-muted font-normal"> (opcional)</span>';
     });
 
     const errorTarget = (input: HTMLElement) =>
-      input === contactBox ? contactBox : (input as HTMLInputElement).type === 'checkbox' ? input.closest('label')! : input;
+      contactBox && input === contactBox ? contactBox : (input as HTMLInputElement).type === 'checkbox' ? input.closest('label')! : input;
     const setError = (input: HTMLElement | null, msg: string | null, key?: string) => {
       if (!input) return;
       const name = key || (input as HTMLInputElement).name;
@@ -234,6 +264,11 @@ const opt = '<span class="text-ink-muted font-normal"> (opcional)</span>';
       nombre: (i) => (i.value.trim().length >= 2 ? null : 'Completá tu nombre.'),
       consentimiento: (i) => (i.checked ? null : 'Necesito tu consentimiento para responderte.'),
     };
+    const QUICK_MSG = {
+      whatsapp_missing: 'Dejanos tu WhatsApp para poder responderte.',
+      whatsapp_invalid: 'Revisá el número: +54 9, código de área y número.',
+      producto: 'Contanos qué necesitás traer.',
+    };
     const MSG = {
       whatsapp: 'Revisá el número: +54 9, código de área y número. O dejalo vacío y usá el email.',
       email: 'Revisá el email, o dejalo vacío y usá WhatsApp.',
@@ -245,6 +280,26 @@ const opt = '<span class="text-ink-muted font-normal"> (opcional)</span>';
       setError(el('email'), c.errors.email ? MSG.email : null);
       setError(contactBox, c.errors.contact ? MSG.contact : null, 'contact');
       return c;
+    };
+    const quickWhatsapp = () => {
+      const c = contactCheck({ whatsapp: el('whatsapp')!.value, email: '' });
+      const msg = c.errors.contact ? QUICK_MSG.whatsapp_missing : c.errors.whatsapp ? QUICK_MSG.whatsapp_invalid : null;
+      setError(el('whatsapp'), msg);
+      return msg;
+    };
+    const quickProducto = (i: HTMLInputElement) => (i.value.trim().length >= 3 ? null : QUICK_MSG.producto);
+
+    // Quick form: fields in rendered order (WhatsApp, producto, consent).
+    const validateQuick = (): string | null => {
+      const checks: [string, () => string | null][] = [
+        ['whatsapp', quickWhatsapp],
+        ['producto', () => { const m = quickProducto(el('producto')!); setError(el('producto'), m); return m; }],
+        ['consentimiento', () => { const m = fieldValidators.consentimiento(el('consentimiento')!); setError(el('consentimiento'), m); return m; }],
+      ];
+      let first: string | null = null;
+      for (const [name, check] of checks) if (check() && !first) first = name;
+      if (first) el(first)?.focus();
+      return first;
     };
 
     // Returns the first failing field name, or null when the form is valid.
@@ -271,6 +326,13 @@ const opt = '<span class="text-ink-muted font-normal"> (opcional)</span>';
     // Clear errors as soon as they're fixed: while typing, not on blur, so the layout never shifts under a click.
     const recheck = (e: Event) => {
       const t = e.target as HTMLInputElement;
+      if (quick) {
+        if (!t.getAttribute('aria-invalid')) return;
+        if (t.name === 'whatsapp' && contactCheck({ whatsapp: t.value, email: '' }).ok) setError(t, null);
+        else if (t.name === 'producto' && !quickProducto(t)) setError(t, null);
+        else if (t.name === 'consentimiento' && t.checked) setError(t, null);
+        return;
+      }
       if (t.name === 'whatsapp' || t.name === 'email') {
         if (form.querySelector('[data-contact] [aria-invalid], [data-contact][aria-invalid]')) checkContact();
       } else if (t.name in fieldValidators && t.getAttribute('aria-invalid') && !fieldValidators[t.name](t)) setError(t, null);
@@ -294,7 +356,7 @@ const opt = '<span class="text-ink-muted font-normal"> (opcional)</span>';
       e.preventDefault();
       funnel('submit_pressed');
       errorBox.classList.add('hidden');
-      const blocked = validate();
+      const blocked = quick ? validateQuick() : validate();
       if (blocked) { funnel('submit_blocked', blocked); return; }
       if ((el('empresa_web')?.value ?? '') !== '') return; // bot
 
@@ -302,9 +364,9 @@ const opt = '<span class="text-ink-muted font-normal"> (opcional)</span>';
       ['utm_source', 'utm_medium', 'utm_campaign', 'utm_term', 'utm_content', 'gclid'].forEach((k) => { el(k)!.value = get(k); });
       el('landing_page')!.value = landing;
       el('page')!.value = location.pathname;
-      const valor = el('valor_pedido')!.value;
-      const score = leadScore({ orderValue: valor });
-      const c = contactCheck({ whatsapp: el('whatsapp')!.value, email: el('email')!.value });
+      const valor = el('valor_pedido')?.value || '';
+      const score = quick ? 'B' : leadScore({ orderValue: valor });
+      const c = contactCheck({ whatsapp: el('whatsapp')!.value, email: el('email')?.value || '' });
 
       const submit = form.querySelector<HTMLButtonElement>('[data-submit]')!;
       submit.disabled = true;
@@ -313,7 +375,7 @@ const opt = '<span class="text-ink-muted font-normal"> (opcional)</span>';
       const data = new FormData(form);
       data.delete('empresa_web');
       data.set('whatsapp', c.whatsapp);
-      data.set('email', c.email);
+      if (!quick) data.set('email', c.email);
 
       try {
         if (preview) {
@@ -338,7 +400,7 @@ const opt = '<span class="text-ink-muted font-normal"> (opcional)</span>';
       if (score === 'A') track('qualified_lead', { rubro: el('rubro')?.value });
       try {
         sessionStorage.setItem('dd_lead', JSON.stringify({
-          nombre: (el('nombre')!.value || '').trim().split(/\s+/)[0],
+          nombre: (el('nombre')?.value || '').trim().split(/\s+/)[0],
           producto: (el('producto')!.value || '').trim().split('\n')[0].slice(0, 80),
         }));
       } catch {}

@@ -15,22 +15,31 @@ const selectedRubro = (html) => {
   return m ? m[1] : null;
 };
 
-test('rubro is preselected on sector pages and not on / or /cotizacion', () => {
-  assert.equal(selectedRubro(page('maquinaria')), 'maquinaria');
-  assert.equal(selectedRubro(page('packaging')), 'packaging');
-  assert.equal(selectedRubro(page('mobiliario')), 'mobiliario');
-  assert.equal(selectedRubro(page('index')), ''); // the "Elegí una opción" placeholder
-  assert.equal(selectedRubro(page('cotizacion')), '');
+test('quick form on / and sector pages: WhatsApp + need + consent; rubro hidden from the page', () => {
+  for (const [p, rubro] of [['index', ''], ['maquinaria', 'maquinaria'], ['packaging', 'packaging'], ['mobiliario', 'mobiliario']]) {
+    const html = page(p);
+    const f = form(html);
+    const tag = (name) => (f.match(new RegExp(`<(?:input|select|textarea)[^>]*name="${name}"[^>]*>`)) || [null])[0];
+    assert.match(f, /data-variant="quick"/, `${p}: quick variant`);
+    assert.match(tag('whatsapp'), /\srequired/, `${p}: whatsapp required`);
+    assert.match(tag('producto'), /<textarea[^>]*\srequired/, `${p}: producto textarea required`);
+    assert.match(tag('consentimiento'), /\srequired/, `${p}: consent required`);
+    assert.match(tag('rubro'), /type="hidden"/, `${p}: rubro hidden`);
+    assert.match(tag('rubro'), rubro ? new RegExp(`value="${rubro}"`) : /\svalue(="")?[\s>]/, `${p}: rubro = ${rubro || '(empty)'}`);
+    for (const gone of ['valor_pedido', 'nombre', 'empresa', 'email']) assert.equal(tag(gone), null, `${p}: no ${gone} field`);
+    for (const name of ['empresa_web', 'utm_source', 'utm_campaign', 'utm_term', 'gclid', 'landing_page', 'pv', 'turnstile_state']) assert.ok(tag(name), `${p}: ${name}`);
+    assert.match(f, /¿Qué necesitás traer de China\?/, `${p}: textarea label`);
+    // order as rendered: whatsapp, producto, consent
+    assert.ok(f.indexOf('name="whatsapp"') < f.indexOf('name="producto"') && f.indexOf('name="producto"') < f.indexOf('name="consentimiento"'), `${p}: field order`);
+    const sec = html.slice(html.indexOf('id="cotizar"'), html.indexOf('data-quote-form'));
+    assert.match(sec, /Pedido mínimo USD 10\.000/, `${p}: minimum order line above the form`);
+  }
 });
 
-test('every quote form: WhatsApp, email and empresa are not required on their own; core fields are', () => {
-  for (const p of ['index', 'maquinaria', 'packaging', 'mobiliario', 'cotizacion']) {
-    const f = form(page(p));
-    const tag = (name) => f.match(new RegExp(`<(?:input|select|textarea)[^>]*name="${name}"[^>]*>`))[0];
-    for (const name of ['whatsapp', 'email', 'empresa']) assert.doesNotMatch(tag(name), /\srequired/, `${p}: ${name}`);
-    for (const name of ['rubro', 'valor_pedido', 'producto', 'nombre', 'consentimiento']) assert.match(tag(name), /\srequired/, `${p}: ${name}`);
-    for (const name of ['empresa_web', 'utm_source', 'utm_campaign', 'utm_term', 'gclid', 'landing_page', 'pv']) assert.ok(tag(name), `${p}: ${name}`);
-  }
+test('/cotizacion keeps the full form', () => {
+  const f = form(page('cotizacion'));
+  assert.match(f, /data-variant="full"/);
+  for (const name of ['rubro', 'valor_pedido', 'producto', 'nombre', 'empresa', 'whatsapp', 'email', 'consentimiento']) assert.match(f, new RegExp(`name="${name}"`), name);
 });
 
 test('first screen: headline, 3 proof lines, quote CTA and WhatsApp button on home and sector pages', () => {

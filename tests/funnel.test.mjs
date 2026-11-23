@@ -5,7 +5,7 @@ import { sanitizeEvent, deviceFromUA, FUNNEL_EVENTS, newPageloadId } from '../sr
 const base = { pv: 'abc123def456', path: '/maquinaria', utm_campaign: 'maquinaria', utm_term: 'importar maquinaria de china' };
 
 test('every funnel event is accepted with its context', () => {
-  assert.deepEqual(FUNNEL_EVENTS, ['form_view', 'form_start', 'submit_pressed', 'submit_blocked', 'turnstile_fail', 'submit_success', 'whatsapp_click', 'cta_click', 'scroll_50']);
+  assert.deepEqual(FUNNEL_EVENTS, ['form_view', 'form_start', 'submit_pressed', 'submit_blocked', 'turnstile_fail', 'submit_success', 'whatsapp_click', 'cta_click', 'scroll_50', 'form_field_focus']);
   for (const event of FUNNEL_EVENTS) {
     const r = sanitizeEvent({ ...base, event });
     assert.equal(r.event, event);
@@ -60,4 +60,11 @@ test('whatsapp_click and cta_click keep their position on the page; scroll_50 ha
   assert.equal(sanitizeEvent({ ...base, event: 'cta_click', detail: 'x'.repeat(41) }).detail, '');
   assert.equal(sanitizeEvent({ ...base, event: 'scroll_50', detail: 'hero-home' }).detail, '');
   assert.equal(sanitizeEvent({ ...base, event: 'scroll_50' }).utm_term, 'importar maquinaria de china');
+});
+
+test('form_field_focus keeps the field name; anything else is dropped', () => {
+  for (const f of ['whatsapp', 'producto', 'consentimiento', 'rubro', 'valor_pedido', 'nombre', 'empresa', 'email']) {
+    assert.equal(sanitizeEvent({ ...base, event: 'form_field_focus', detail: f }).detail, f);
+  }
+  assert.equal(sanitizeEvent({ ...base, event: 'form_field_focus', detail: 'empresa_web' }).detail, '');
 });

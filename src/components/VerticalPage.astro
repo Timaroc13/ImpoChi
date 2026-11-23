@@ -38,10 +38,9 @@ const PROOF: Record<Vertical['slug'], string> = {
     ctaId={`hero-${v.slug}`}
     waLocation={`hero-${v.slug}`}
     waText={v.waText}
-    smallPrint={`Búsqueda ${fmtUSD(v.searchFee)} · Pedido mínimo ${fmtUSD(TERMS.minOrder)}`}
   />
 
-  <QuoteForm rubro={v.rubro} heading={`Pedí tu cotización de ${v.label.toLowerCase()}`} />
+  <QuoteForm quick rubro={v.rubro} heading={`Pedí tu cotización de ${v.label.toLowerCase()}`} />
 
 
   <ValueProps />
