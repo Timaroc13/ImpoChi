@@ -10,12 +10,13 @@ const MAX_BYTES = 10 * 1024 * 1024;
 const FILE_TYPES = ['application/pdf', 'image/jpeg', 'image/png'];
 const RUBROS = ['maquinaria', 'packaging', 'mobiliario', 'otro'];
 const RATE_LIMIT = { max: 5, minutes: 10 };
+const NOT_NULL = new Set(['rubro', 'producto', 'cantidad', 'valor_pedido', 'plazo', 'nombre', 'empresa', 'ri', 'whatsapp', 'email', 'consentimiento']);
 
 const TEXT_FIELDS = {
   rubro: 20, producto: 2000, especificaciones: 3000, cantidad: 100, precio_objetivo: 100, valor_pedido: 20, plazo: 20,
   experiencia: 20, nombre: 120, empresa: 120, ri: 10, cuit: 20, cargo: 60, whatsapp: 30, email: 160, provincia: 60,
   consentimiento: 5, utm_source: 200, utm_medium: 200, utm_campaign: 200, utm_term: 200, utm_content: 200, gclid: 300,
-  landing_page: 300, page: 300, pv: 40, turnstile_state: 20,
+  landing_page: 300, page: 300, pv: 40, turnstile_state: 20, form_variant: 10,
 } as const;
 type Field = keyof typeof TEXT_FIELDS;
 
@@ -75,14 +76,23 @@ export const onRequestPost = async ({ request, env, waitUntil }: Ctx) => {
     v[k] = String(form.get(k) ?? '').trim().slice(0, max);
   }
 
-  // Validate (mirrors the form; never trust the browser). Required: rubro, producto, valor_pedido,
-  // nombre, consentimiento, and WhatsApp OR email (at least one, each valid if filled). Everything else is optional.
+  // Validate (mirrors the form; never trust the browser).
+  // quick (home + sector pages): WhatsApp (valid), producto and consentimiento; rubro optional (hidden, from the page).
+  // full (/cotizacion): rubro, producto, valor_pedido, nombre, consentimiento, and WhatsApp OR email.
+  const quick = v.form_variant === 'quick';
   const errors: string[] = [];
-  if (!RUBROS.includes(v.rubro)) errors.push('rubro');
-  if (v.producto.length < 10) errors.push('producto');
-  if (!ORDER_VALUES.some((o) => o.value === v.valor_pedido)) errors.push('valor_pedido');
+  if (quick) {
+    if (v.rubro && !RUBROS.includes(v.rubro)) v.rubro = '';
+    if (v.producto.length < 3) errors.push('producto');
+    if (!v.whatsapp || contactCheck({ whatsapp: v.whatsapp, email: '' }).errors.contact) errors.push('whatsapp');
+    if (v.valor_pedido && !ORDER_VALUES.some((o) => o.value === v.valor_pedido)) v.valor_pedido = '';
+  } else {
+    if (!RUBROS.includes(v.rubro)) errors.push('rubro');
+    if (v.producto.length < 10) errors.push('producto');
+    if (!ORDER_VALUES.some((o) => o.value === v.valor_pedido)) errors.push('valor_pedido');
+    if (v.nombre.length < 2) errors.push('nombre');
+  }
   if (v.plazo && !TIMELINES.some((o) => o.value === v.plazo)) errors.push('plazo');
-  if (v.nombre.length < 2) errors.push('nombre');
   if (v.ri && !['si', 'no', 'nose'].includes(v.ri)) errors.push('ri');
   if (v.cuit && !isValidCuit(v.cuit)) errors.push('cuit');
   const contact = contactCheck({ whatsapp: v.whatsapp, email: v.email });
@@ -100,7 +110,8 @@ export const onRequestPost = async ({ request, env, waitUntil }: Ctx) => {
   v.whatsapp = contact.whatsapp;
   v.email = contact.email;
   v.cuit = v.cuit.replace(/\D/g, '');
-  const score = leadScore({ orderValue: v.valor_pedido });
+  // Quick-form leads carry no order value: score B, the same as "No sé todavía".
+  const score = quick && !v.valor_pedido ? 'B' : leadScore({ orderValue: v.valor_pedido });
   const id = newId();
   const createdAt = new Date().toISOString();
 
@@ -118,7 +129,10 @@ export const onRequestPost = async ({ request, env, waitUntil }: Ctx) => {
     }
   }
 
-  const { pv: _pv, turnstile_state: _ts, ...fields } = v;
+  const { pv: _pv, turnstile_state: _ts, form_variant: _fv, ...fieldsRaw } = v;
+  // Fields not sent are null. Columns declared NOT NULL in migrations/0001 keep '' instead.
+  const fields: Record<string, string | null> = {};
+  for (const [k, val] of Object.entries(fieldsRaw)) fields[k] = val === '' && !NOT_NULL.has(k) ? null : val;
   const row = {
     id, created_at: createdAt, lead_score: score, ...fields,
     files: stored.length ? JSON.stringify(stored) : null,
@@ -145,13 +159,16 @@ export const onRequestPost = async ({ request, env, waitUntil }: Ctx) => {
   await recordFunnelEvent(env, funnelInput(form, 'submit_success'), request.headers.get('User-Agent'));
 
   // Notifications run after the response; a failure here never loses the lead (it is already in D1).
-  waitUntil(notifyTelegram(env, { ...row, turnstile_reason: turnstileReason }, buffers, new URL(request.url).origin).catch((e) => console.error('telegram', e)));
+  waitUntil(notifyTelegram(env, { ...row, turnstile_reason: turnstileReason, form_variant: quick ? 'quick' : 'full' }, buffers, new URL(request.url).origin).catch((e) => console.error('telegram', e)));
   if (env.FORWARD_URL) {
     waitUntil(
       fetch(env.FORWARD_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', ...(env.FORWARD_SECRET ? { 'X-DD-Secret': env.FORWARD_SECRET } : {}) },
-        body: JSON.stringify({ ...row, ip_hash: undefined, files: stored }),
+        body: JSON.stringify({
+          ...Object.fromEntries(Object.entries(row).map(([k, val]) => [k, val === '' ? null : val])),
+          ip_hash: undefined, files: stored, form_variant: quick ? 'quick' : 'full',
+        }),
       }).catch((e) => console.error('forward', e)),
     );
   }
@@ -175,15 +192,18 @@ async function notifyTelegram(env: Env, r: Record<string, any>, files: { name: s
   }
   const e = (s: string) => escapeHtml(String(s ?? ''));
   const wa = String(r.whatsapp || '').replace(/\D/g, '');
+  const quick = r.form_variant === 'quick';
   const lines = [
-    `<b>${r.lead_score === 'A' ? '🟢' : r.lead_score === 'B' ? '🟡' : '⚪️'} Lead ${e(r.lead_score)} · ${e(r.rubro)} · ${e(LABEL(ORDER_VALUES, r.valor_pedido))}</b>`,
+    quick
+      ? `<b>⚡️ QUICK FORM · ${e(r.rubro || 'sin rubro')} · ${e(r.page || r.landing_page || '')}</b>`
+      : `<b>${r.lead_score === 'A' ? '🟢' : r.lead_score === 'B' ? '🟡' : '⚪️'} Lead ${e(r.lead_score)} · ${e(r.rubro)} · ${e(LABEL(ORDER_VALUES, r.valor_pedido))}</b>`,
     r.turnstile === 'unverified' ? `⚠️ Captcha no verificado (${e(r.turnstile_reason || 'sin token')}): revisá que sea una persona` : null,
-    `<b>${e(r.empresa || '(sin empresa)')}</b> — ${e(r.nombre)}`,
+    quick ? null : `<b>${e(r.empresa || '(sin empresa)')}</b> — ${e(r.nombre)}`,
     '',
     e(r.producto.slice(0, 1500)),
     '',
     wa ? `WhatsApp: https://wa.me/${wa}` : 'WhatsApp: (no dejó)',
-    r.email ? `Email: ${e(r.email)}` : 'Email: (no dejó)',
+    r.email ? `Email: ${e(r.email)}` : quick ? null : 'Email: (no dejó)',
     `Origen: ${e([r.utm_source, r.utm_medium, r.utm_campaign, r.utm_term].filter(Boolean).join(' / ') || 'directo')} · ${e(r.landing_page || r.page)}`,
     files.length ? `Archivos: ${files.length}` : null,
     `${origin}/api/leads.csv`,
@@ -193,7 +213,7 @@ async function notifyTelegram(env: Env, r: Record<string, any>, files: { name: s
   for (const f of files) {
     const body = new FormData();
     body.append('chat_id', env.TELEGRAM_CHAT_ID);
-    body.append('caption', `${r.empresa || r.nombre} · ${f.name}`.slice(0, 1000));
+    body.append('caption', `${r.empresa || r.nombre || r.whatsapp} · ${f.name}`.slice(0, 1000));
     body.append('document', new Blob([f.data], { type: f.type }), f.name);
     const rf = await sendTelegram(env, 'sendDocument', body);
     if (!rf.ok) console.error('telegram sendDocument failed:', rf.status, rf.description);

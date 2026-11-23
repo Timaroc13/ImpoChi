@@ -4,13 +4,14 @@
 
 export const FUNNEL_EVENTS = [
   'form_view', 'form_start', 'submit_pressed', 'submit_blocked', 'turnstile_fail', 'submit_success',
-  'whatsapp_click', 'cta_click', 'scroll_50',
+  'whatsapp_click', 'cta_click', 'scroll_50', 'form_field_focus',
 ];
 
 /** Allowed `detail` values per event (anything else is dropped to ''). */
 export const FUNNEL_DETAILS = {
   submit_blocked: ['rubro', 'valor_pedido', 'producto', 'nombre', 'whatsapp', 'email', 'contact', 'consentimiento'],
   turnstile_fail: ['widget', 'timeout', 'siteverify'],
+  form_field_focus: ['rubro', 'valor_pedido', 'producto', 'nombre', 'empresa', 'whatsapp', 'email', 'consentimiento'],
 };
 
 /** Events whose detail is a position on the page (data-wa / data-cta ids such as "hero-maquinaria"). */

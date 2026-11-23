@@ -2,7 +2,6 @@
 import Base from '../layouts/Base.astro';
 import ValueProps from '../components/ValueProps.astro';
 import HowItWorks from '../components/HowItWorks.astro';
-import Fees from '../components/Fees.astro';
 import FounderStrip from '../components/FounderStrip.astro';
 import QuoteForm from '../components/QuoteForm.astro';
 import FaqList from '../components/FaqList.astro';
@@ -15,7 +14,7 @@ import { orgSchema, personSchema, serviceSchema, faqSchema } from '../lib/schema
 import { fmtUSD } from '../lib/format.js';
 
 const site = Astro.site!;
-const homeFaq = FAQ_GENERAL.filter((f) => ['¿Cuánto cobrás?', '¿Hay pedido mínimo?', '¿Ustedes importan por mí?', '¿Cómo le pago a la fábrica y qué pasa con el anticipo?', '¿Por qué no voy directo a Alibaba?'].includes(f.q));
+const homeFaq = FAQ_GENERAL.filter((f) => ['¿Hay pedido mínimo?', '¿Ustedes importan por mí?', '¿Cómo le pago a la fábrica y qué pasa con el anticipo?', '¿Por qué no voy directo a Alibaba?'].includes(f.q));
 ---
 <Base
   title="Sourcing en China para pymes argentinas | Dos Deltas"
@@ -66,9 +65,8 @@ const homeFaq = FAQ_GENERAL.filter((f) => ['¿Cuánto cobrás?', '¿Hay pedido m
   </section>
 
   <HowItWorks />
-  <Fees />
   <FounderStrip />
-  <QuoteForm />
+  <QuoteForm quick />
   <FaqList items={homeFaq} />
   <p class="wrap -mt-6 pb-10 text-small"><a href="/preguntas-frecuentes">Ver todas las preguntas</a></p>
   <FinalCta />
